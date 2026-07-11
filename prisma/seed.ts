@@ -8,10 +8,11 @@ const prisma = new PrismaClient({ adapter });
 async function main() {
 	const event = await prisma.event.upsert({
 		where: { slug: 'horizons-crux' },
-		update: {},
+		update: { attendSlug: 'horizons-crux' },
 		create: {
 			name: 'Horizons Crux',
 			slug: 'horizons-crux',
+			attendSlug: 'horizons-crux',
 			stage: 'SUBMISSION',
 			voteLimit: 3,
 			maxTeamSize: 3,

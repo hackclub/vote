@@ -1,5 +1,6 @@
 import { env } from '$env/dynamic/private';
 import { prisma } from './db';
+import { lookupAttendParticipant } from './attend';
 import type { User } from '../../generated/prisma/client';
 
 const AUTH_BASE = 'https://auth.hackclub.com';
@@ -112,5 +113,46 @@ export async function signIn(identity: HackClubIdentity, tokens: TokenResponse):
 		data: { userId: user.id }
 	});
 
+	await provisionAttendParticipation(user);
+
 	return user;
+}
+
+/**
+ * For every event backed by Attend, ask the Attend API whether this user is a
+ * registered participant and, if so, ensure a linked Participant row exists.
+ * This replaces the manual CSV allowlist as the source of participation.
+ * Failures are logged but never block sign-in.
+ */
+async function provisionAttendParticipation(user: User): Promise<void> {
+	try {
+		const events = await prisma.event.findMany({
+			where: { attendSlug: { not: null } },
+			select: { id: true, attendSlug: true }
+		});
+		if (events.length === 0) return;
+
+		const [firstName, ...rest] = (user.name ?? '').trim().split(/\s+/);
+		const lastName = rest.join(' ');
+
+		await Promise.all(
+			events.map(async (event) => {
+				const lookup = await lookupAttendParticipant(event.attendSlug!, user.email);
+				if (!lookup?.registered) return;
+				await prisma.participant.upsert({
+					where: { eventId_email: { eventId: event.id, email: user.email } },
+					create: {
+						eventId: event.id,
+						email: user.email,
+						userId: user.id,
+						firstName: firstName || null,
+						lastName: lastName || null
+					},
+					update: { userId: user.id }
+				});
+			})
+		);
+	} catch (e) {
+		console.error('[attend] provisioning participation failed:', e);
+	}
 }

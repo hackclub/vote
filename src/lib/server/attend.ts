@@ -49,3 +49,39 @@ export async function lookupAttendParticipant(
 		status: data.status ?? null
 	};
 }
+
+export interface AttendRosterEntry {
+	email: string;
+	firstName: string | null;
+	lastName: string | null;
+}
+
+/**
+ * Fetches the event's full participant roster from Attend
+ * (GET /api/v1/events/:slug/participants/roster). Attend already excludes
+ * withdrawn/rejected registrations and returns only email + name.
+ *
+ * Throws on failure — unlike the per-login lookup, roster sync is an explicit
+ * admin action, so the error should surface in the UI rather than be swallowed.
+ */
+export async function fetchAttendRoster(attendSlug: string): Promise<AttendRosterEntry[]> {
+	if (!env.ATTEND_API_KEY) {
+		throw new Error('ATTEND_API_KEY is not configured');
+	}
+
+	const url = `${ATTEND_BASE}/api/v1/events/${encodeURIComponent(attendSlug)}/participants/roster`;
+	const res = await fetch(url, { headers: { Authorization: `Bearer ${env.ATTEND_API_KEY}` } });
+	if (!res.ok) {
+		const body = await res.text().catch(() => '');
+		throw new Error(`Attend roster fetch failed (${res.status}): ${body.slice(0, 200)}`);
+	}
+
+	const data = await res.json();
+	return (data.participants ?? [])
+		.filter((p: { email?: string }) => typeof p.email === 'string' && p.email.includes('@'))
+		.map((p: { email: string; first_name?: string; last_name?: string }) => ({
+			email: p.email.toLowerCase().trim(),
+			firstName: p.first_name || null,
+			lastName: p.last_name || null
+		}));
+}

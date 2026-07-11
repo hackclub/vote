@@ -1,20 +1,24 @@
 import { fail } from '@sveltejs/kit';
-import Papa from 'papaparse';
 import { prisma } from '$lib/server/db';
+import { fetchAttendRoster } from '$lib/server/attend';
 import type { Actions, PageServerLoad } from './$types';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const load: PageServerLoad = async ({ params }) => {
-	const participants = await prisma.participant.findMany({
-		where: { eventId: params.id },
-		orderBy: { email: 'asc' },
-		include: {
-			user: { select: { id: true } },
-			teamMember: { select: { teamId: true } }
-		}
-	});
+	const [event, participants] = await Promise.all([
+		prisma.event.findUnique({ where: { id: params.id }, select: { attendSlug: true } }),
+		prisma.participant.findMany({
+			where: { eventId: params.id },
+			orderBy: { email: 'asc' },
+			include: {
+				user: { select: { id: true } },
+				teamMember: { select: { teamId: true } }
+			}
+		})
+	]);
 	return {
+		attendSlug: event?.attendSlug ?? null,
 		participants: participants.map((p) => ({
 			id: p.id,
 			email: p.email,
@@ -25,58 +29,39 @@ export const load: PageServerLoad = async ({ params }) => {
 	};
 };
 
-function pick(row: Record<string, string>, ...keys: string[]): string {
-	for (const key of Object.keys(row)) {
-		const norm = key.toLowerCase().replace(/[^a-z]/g, '');
-		if (keys.includes(norm)) return (row[key] ?? '').trim();
-	}
-	return '';
-}
-
 export const actions: Actions = {
-	upload: async ({ params, request }) => {
-		const form = await request.formData();
-		const file = form.get('file');
-		if (!(file instanceof File) || file.size === 0) {
-			return fail(400, { message: 'Choose a CSV file to upload.' });
+	sync: async ({ params }) => {
+		const event = await prisma.event.findUnique({
+			where: { id: params.id },
+			select: { attendSlug: true }
+		});
+		if (!event?.attendSlug) {
+			return fail(400, { message: 'This event has no Attend slug configured.' });
 		}
 
-		const text = await file.text();
-		const parsed = Papa.parse<Record<string, string>>(text, {
-			header: true,
-			skipEmptyLines: true
+		let roster;
+		try {
+			roster = await fetchAttendRoster(event.attendSlug);
+		} catch (e) {
+			console.error('[attend] roster sync failed:', e);
+			return fail(502, { message: e instanceof Error ? e.message : 'Attend roster fetch failed.' });
+		}
+
+		const result = await prisma.participant.createMany({
+			data: roster.map((p) => ({
+				eventId: params.id,
+				email: p.email,
+				firstName: p.firstName,
+				lastName: p.lastName
+			})),
+			skipDuplicates: true
 		});
 
-		let added = 0;
-		let skipped = 0;
-		const invalid: string[] = [];
-
-		for (const row of parsed.data) {
-			const email = pick(row, 'email', 'emailaddress').toLowerCase();
-			if (!EMAIL_RE.test(email)) {
-				const raw = Object.values(row).join(',').slice(0, 60);
-				if (raw.trim()) invalid.push(raw);
-				continue;
-			}
-			const fullName = pick(row, 'name', 'fullname');
-			const firstName = pick(row, 'firstname', 'first') || fullName.split(/\s+/)[0] || null;
-			const lastName =
-				pick(row, 'lastname', 'last') || fullName.split(/\s+/).slice(1).join(' ') || null;
-
-			const result = await prisma.participant.createMany({
-				data: [{ eventId: params.id, email, firstName, lastName }],
-				skipDuplicates: true
-			});
-			if (result.count > 0) added++;
-			else skipped++;
-		}
-
 		return {
-			uploaded: {
-				added,
-				skipped,
-				invalid: invalid.slice(0, 10),
-				invalidCount: invalid.length
+			synced: {
+				added: result.count,
+				skipped: roster.length - result.count,
+				total: roster.length
 			}
 		};
 	},

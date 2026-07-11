@@ -27,15 +27,19 @@ ENV NODE_ENV=production
 # adapter-node listens on 0.0.0.0:3000 by default; make the port configurable
 ENV PORT=3000
 
-# Bring over the built server, production deps, and Prisma runtime files
+# Bring over the built server, production deps, and Prisma runtime files.
+# prisma.config.ts is required by the CLI to resolve DATABASE_URL for migrations.
 COPY --from=build /app/build ./build
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 
 # Run as the non-root user provided by the base image
 USER bun
 
 EXPOSE 3000
 
-CMD ["bun", "./build/index.js"]
+# Apply any pending migrations before booting. `migrate deploy` is idempotent:
+# it only runs migrations not yet recorded in the target database.
+CMD ["sh", "-c", "bunx prisma migrate deploy && bun ./build/index.js"]

@@ -35,10 +35,23 @@ export const actions: Actions = {
 		const event = await prisma.event.findUnique({ where: { id: params.id } });
 		if (!event) error(404);
 
+		// The slug doubles as the Attend event slug, so admins can edit it to match.
+		const slug =
+			String(form.get('slug') ?? '')
+				.trim()
+				.toLowerCase()
+				.replace(/[^a-z0-9-]+/g, '-')
+				.replace(/^-+|-+$/g, '') || event.slug;
+		if (slug !== event.slug) {
+			const taken = await prisma.event.findUnique({ where: { slug } });
+			if (taken) return fail(400, { message: `An event with slug "${slug}" already exists` });
+		}
+
 		await prisma.event.update({
 			where: { id: params.id },
 			data: {
 				name: String(form.get('name') ?? event.name).trim() || event.name,
+				slug,
 				voteLimit,
 				maxTeamSize,
 				airtableBaseId: String(form.get('airtableBaseId') ?? '').trim() || null,

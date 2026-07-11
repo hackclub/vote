@@ -23,7 +23,6 @@ model Event {
   maxTeamSize     Int        @default(3)
   airtableBaseId  String?
   airtableTableId String?
-  attendSlug      String?
   checklistItems  String[]
   createdAt       DateTime   @default(now())
 

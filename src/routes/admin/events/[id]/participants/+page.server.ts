@@ -6,19 +6,15 @@ import type { Actions, PageServerLoad } from './$types';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const load: PageServerLoad = async ({ params }) => {
-	const [event, participants] = await Promise.all([
-		prisma.event.findUnique({ where: { id: params.id }, select: { attendSlug: true } }),
-		prisma.participant.findMany({
-			where: { eventId: params.id },
-			orderBy: { email: 'asc' },
-			include: {
-				user: { select: { id: true } },
-				teamMember: { select: { teamId: true } }
-			}
-		})
-	]);
+	const participants = await prisma.participant.findMany({
+		where: { eventId: params.id },
+		orderBy: { email: 'asc' },
+		include: {
+			user: { select: { id: true } },
+			teamMember: { select: { teamId: true } }
+		}
+	});
 	return {
-		attendSlug: event?.attendSlug ?? null,
 		participants: participants.map((p) => ({
 			id: p.id,
 			email: p.email,
@@ -33,15 +29,14 @@ export const actions: Actions = {
 	sync: async ({ params }) => {
 		const event = await prisma.event.findUnique({
 			where: { id: params.id },
-			select: { attendSlug: true }
+			select: { slug: true }
 		});
-		if (!event?.attendSlug) {
-			return fail(400, { message: 'This event has no Attend slug configured.' });
-		}
+		if (!event) return fail(404, { message: 'Event not found.' });
 
+		// The event's slug doubles as its Attend event slug.
 		let roster;
 		try {
-			roster = await fetchAttendRoster(event.attendSlug);
+			roster = await fetchAttendRoster(event.slug);
 		} catch (e) {
 			console.error('[attend] roster sync failed:', e);
 			return fail(502, { message: e instanceof Error ? e.message : 'Attend roster fetch failed.' });

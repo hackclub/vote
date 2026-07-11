@@ -15,18 +15,14 @@
 		<Card.Header>
 			<Card.Title>Sync participants from Attend</Card.Title>
 			<Card.Description>
-				{#if data.attendSlug}
-					Pulls the roster for <code>{data.attendSlug}</code> from Attend. Existing emails are
-					skipped; withdrawn registrations are never included. Participants also get added
-					automatically when they sign in.
-				{:else}
-					This event has no Attend slug configured — set one to sync the roster.
-				{/if}
+				Pulls the roster for <code>{data.event.slug}</code> from Attend (the event slug must match
+				the Attend event slug). Existing emails are skipped; withdrawn registrations are never
+				included. Participants also get added automatically when they sign in.
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<form method="POST" action="?/sync" use:enhance>
-				<Button type="submit" disabled={!data.attendSlug}>Sync from Attend</Button>
+				<Button type="submit">Sync from Attend</Button>
 			</form>
 			{#if form?.synced}
 				<p class="mt-3 text-sm">

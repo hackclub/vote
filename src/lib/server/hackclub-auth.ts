@@ -119,17 +119,16 @@ export async function signIn(identity: HackClubIdentity, tokens: TokenResponse):
 }
 
 /**
- * For every event backed by Attend, ask the Attend API whether this user is a
- * registered participant and, if so, ensure a linked Participant row exists.
- * This replaces the manual CSV allowlist as the source of participation.
+ * Ask the Attend API whether this user is a registered participant of each
+ * event and, if so, ensure a linked Participant row exists. The event's slug
+ * doubles as its Attend slug. This replaces the manual CSV allowlist as the
+ * source of participation. The API key is scoped to one Attend event, so
+ * lookups against other events fail closed (403 → null → skipped).
  * Failures are logged but never block sign-in.
  */
 async function provisionAttendParticipation(user: User): Promise<void> {
 	try {
-		const events = await prisma.event.findMany({
-			where: { attendSlug: { not: null } },
-			select: { id: true, attendSlug: true }
-		});
+		const events = await prisma.event.findMany({ select: { id: true, slug: true } });
 		if (events.length === 0) return;
 
 		const [firstName, ...rest] = (user.name ?? '').trim().split(/\s+/);
@@ -137,7 +136,7 @@ async function provisionAttendParticipation(user: User): Promise<void> {
 
 		await Promise.all(
 			events.map(async (event) => {
-				const lookup = await lookupAttendParticipant(event.attendSlug!, user.email);
+				const lookup = await lookupAttendParticipant(event.slug, user.email);
 				if (!lookup?.registered) return;
 				await prisma.participant.upsert({
 					where: { eventId_email: { eventId: event.id, email: user.email } },

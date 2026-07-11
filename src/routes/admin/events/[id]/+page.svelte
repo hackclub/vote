@@ -67,6 +67,13 @@
 						<Label for="name">Event name</Label>
 						<Input id="name" name="name" value={data.event.name} />
 					</div>
+					<div class="flex flex-col gap-1.5">
+						<Label for="slug">Event slug</Label>
+						<Input id="slug" name="slug" placeholder="horizons-crux" value={data.event.slug} />
+						<p class="text-xs text-muted-foreground">
+							Must match the Attend event slug — participation checks and roster sync use it.
+						</p>
+					</div>
 					<div class="grid grid-cols-2 gap-4">
 						<div class="flex flex-col gap-1.5">
 							<Label for="voteLimit">Votes per person</Label>

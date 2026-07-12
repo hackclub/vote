@@ -33,14 +33,17 @@
 		{@render children()}
 	</main>
 	{#if data.signedIn}
-		<form method="POST" action="/auth/logout" class="fixed right-4 bottom-4 z-10">
-			<button
-				type="submit"
-				class="cursor-pointer text-xs text-[#999] transition-colors hover:text-white"
-			>
-				Sign out
-			</button>
-		</form>
+		<div class="fixed right-4 bottom-4 z-10 flex items-center gap-1.5 text-xs text-[#999]">
+			<form method="POST" action="/auth/logout">
+				<button type="submit" class="cursor-pointer transition-colors hover:text-white">
+					Sign out
+				</button>
+			</form>
+			{#if data.isAdmin}
+				<span aria-hidden="true">•</span>
+				<a href="/admin" class="transition-colors hover:text-white">Admin</a>
+			{/if}
+		</div>
 	{/if}
 </div>
 

@@ -1,4 +1,5 @@
 import { getParticipantContext } from '$lib/server/flow';
+import { getAdminScope } from '$lib/server/admin';
 import type { LayoutServerLoad } from './$types';
 
 // Platform fallbacks when an event hasn't set its own branding (or on the
@@ -19,5 +20,10 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 		}
 	}
 
-	return { logoUrl, backgroundUrl, signedIn: !!locals.user };
+	return {
+		logoUrl,
+		backgroundUrl,
+		signedIn: !!locals.user,
+		isAdmin: !!(await getAdminScope(locals.user))
+	};
 };

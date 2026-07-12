@@ -1,5 +1,6 @@
-import { env } from '$env/dynamic/private';
 import { prisma } from './db';
+import { getEventAccessToken } from './airtable-oauth';
+import { AIRTABLE_SYNC_FIELDS, type AirtableFieldMap } from '$lib/airtable-sync-fields';
 
 const API_BASE = 'https://api.airtable.com/v0';
 const BATCH_SIZE = 10;
@@ -7,6 +8,7 @@ const BATCH_SIZE = 10;
 type AirtableFields = Record<string, unknown>;
 
 async function airtableRequest(
+	token: string,
 	method: 'POST' | 'PATCH' | 'DELETE',
 	baseId: string,
 	tableId: string,
@@ -22,7 +24,7 @@ async function airtableRequest(
 			const res = await fetch(url, {
 				method,
 				headers: {
-					Authorization: `Bearer ${env.AIRTABLE_API_KEY}`,
+					Authorization: `Bearer ${token}`,
 					...(body ? { 'Content-Type': 'application/json' } : {})
 				},
 				body: body ? JSON.stringify(body) : undefined
@@ -46,6 +48,21 @@ function splitName(fullName: string | null): { first: string; last: string } {
 }
 
 /**
+ * Resolves each app field key to the Airtable field key to write, from the
+ * event's stored mapping (field IDs — the records API accepts them in place
+ * of names). Events without a stored mapping match the default field names.
+ * Returns null for fields the admin chose not to sync.
+ */
+function fieldTargets(stored: unknown): (key: string) => string | null {
+	const map = (stored ?? null) as AirtableFieldMap | null;
+	if (!map) {
+		const defaults = new Map(AIRTABLE_SYNC_FIELDS.map((f) => [f.key, f.defaultName]));
+		return (key) => defaults.get(key) ?? null;
+	}
+	return (key) => map[key]?.id ?? null;
+}
+
+/**
  * Mirrors a submitted project into Airtable: one record per team member.
  * Creates missing records, PATCHes existing ones, and stores sync status
  * on each member's AirtableRecord row. Never throws — errors land in syncError.
@@ -61,29 +78,36 @@ export async function syncProjectToAirtable(projectId: string): Promise<void> {
 	if (!project || !project.submittedAt) return;
 
 	const { airtableBaseId, airtableTableId } = project.event;
-	if (!env.AIRTABLE_API_KEY || !airtableBaseId || !airtableTableId) {
-		console.warn('[airtable] skipping sync — API key or base/table not configured');
+	const token = await getEventAccessToken(project.event);
+	if (!token || !airtableBaseId || !airtableTableId) {
+		console.warn('[airtable] skipping sync — event not connected or base/table not chosen');
 		return;
 	}
 
 	// Attachments need a publicly fetchable URL.
-	const screenshotAttachment =
-		project.screenshotUrl?.startsWith('https://') ? [{ url: project.screenshotUrl }] : undefined;
+	const screenshotAttachment = project.screenshotUrl?.startsWith('https://')
+		? [{ url: project.screenshotUrl }]
+		: undefined;
+
+	const target = fieldTargets(project.event.airtableFieldMap);
 
 	const jobs = project.team.members.map((member) => {
 		const p = member.participant;
 		const fromUser = splitName(p.user?.name ?? null);
-		const fields: AirtableFields = {
-			'First Name': p.firstName || fromUser.first,
-			'Last Name': p.lastName || fromUser.last,
-			Email: p.email,
-			'Code URL': project.repoUrl ?? '',
-			'Playable URL': project.demoUrl ?? '',
-			Description: project.description,
-			'Optional - Override Hours Spent': member.hoursEstimate ?? undefined,
-			'Hackatime Projects': member.hackatimeProjects.join(', ')
+		const fields: AirtableFields = {};
+		const set = (key: string, value: unknown) => {
+			const fieldKey = target(key);
+			if (fieldKey !== null && value !== undefined) fields[fieldKey] = value;
 		};
-		if (screenshotAttachment) fields['Screenshot'] = screenshotAttachment;
+		set('firstName', p.firstName || fromUser.first);
+		set('lastName', p.lastName || fromUser.last);
+		set('email', p.email);
+		set('codeUrl', project.repoUrl ?? '');
+		set('playableUrl', project.demoUrl ?? '');
+		set('description', project.description);
+		set('hoursOverride', member.hoursEstimate ?? undefined);
+		set('hackatimeProjects', member.hackatimeProjects.join(', '));
+		set('screenshot', screenshotAttachment);
 		return { member, fields };
 	});
 
@@ -107,7 +131,7 @@ export async function syncProjectToAirtable(projectId: string): Promise<void> {
 	for (let i = 0; i < toCreate.length; i += BATCH_SIZE) {
 		const batch = toCreate.slice(i, i + BATCH_SIZE);
 		try {
-			const res = await airtableRequest('POST', airtableBaseId, airtableTableId, {
+			const res = await airtableRequest(token, 'POST', airtableBaseId, airtableTableId, {
 				records: batch.map((j) => ({ fields: j.fields })),
 				typecast: true
 			});
@@ -137,7 +161,7 @@ export async function syncProjectToAirtable(projectId: string): Promise<void> {
 	for (let i = 0; i < toUpdate.length; i += BATCH_SIZE) {
 		const batch = toUpdate.slice(i, i + BATCH_SIZE);
 		try {
-			await airtableRequest('PATCH', airtableBaseId, airtableTableId, {
+			await airtableRequest(token, 'PATCH', airtableBaseId, airtableTableId, {
 				records: batch.map((j) => ({
 					id: trackingByMember.get(j.member.id)!.airtableRecordId!,
 					fields: j.fields
@@ -161,16 +185,26 @@ export async function syncProjectToAirtable(projectId: string): Promise<void> {
 
 /** Deletes the Airtable records for members being removed from a team. */
 export async function deleteAirtableRecords(
-	baseId: string | null,
-	tableId: string | null,
+	eventId: string,
 	airtableRecordIds: string[]
 ): Promise<void> {
-	if (!env.AIRTABLE_API_KEY || !baseId || !tableId || airtableRecordIds.length === 0) return;
+	if (airtableRecordIds.length === 0) return;
+	const event = await prisma.event.findUnique({ where: { id: eventId } });
+	if (!event?.airtableBaseId || !event.airtableTableId) return;
+	const token = await getEventAccessToken(event);
+	if (!token) return;
 	for (let i = 0; i < airtableRecordIds.length; i += BATCH_SIZE) {
 		const batch = airtableRecordIds.slice(i, i + BATCH_SIZE);
 		const query = batch.map((id) => `records[]=${encodeURIComponent(id)}`).join('&');
 		try {
-			await airtableRequest('DELETE', baseId, tableId, undefined, query);
+			await airtableRequest(
+				token,
+				'DELETE',
+				event.airtableBaseId,
+				event.airtableTableId,
+				undefined,
+				query
+			);
 		} catch (e) {
 			console.error('[airtable] delete failed:', e);
 		}

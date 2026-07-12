@@ -81,31 +81,47 @@
 					<div class="grid grid-cols-2 gap-4">
 						<div class="flex flex-col gap-1.5">
 							<Label for="voteLimit">Votes per person</Label>
-							<Input id="voteLimit" name="voteLimit" type="number" min="1" value={data.event.voteLimit} />
+							<Input
+								id="voteLimit"
+								name="voteLimit"
+								type="number"
+								min="1"
+								value={data.event.voteLimit}
+							/>
 						</div>
 						<div class="flex flex-col gap-1.5">
 							<Label for="maxTeamSize">Max team size</Label>
-							<Input id="maxTeamSize" name="maxTeamSize" type="number" min="1" value={data.event.maxTeamSize} />
+							<Input
+								id="maxTeamSize"
+								name="maxTeamSize"
+								type="number"
+								min="1"
+								value={data.event.maxTeamSize}
+							/>
 						</div>
 					</div>
 					<div class="flex flex-col gap-1.5">
-						<Label for="airtableBaseId">Airtable base ID</Label>
-						<Input id="airtableBaseId" name="airtableBaseId" placeholder="appXXXXXXXXXXXXXX" value={data.event.airtableBaseId ?? ''} />
-					</div>
-					<div class="flex flex-col gap-1.5">
-						<Label for="airtableTableId">Airtable table ID</Label>
-						<Input id="airtableTableId" name="airtableTableId" placeholder="tblXXXXXXXXXXXXXX" value={data.event.airtableTableId ?? ''} />
-					</div>
-					<div class="flex flex-col gap-1.5">
 						<Label for="logoUrl">Logo URL</Label>
-						<Input id="logoUrl" name="logoUrl" type="url" placeholder="https://cdn.example.com/logo.webp" value={data.event.logoUrl ?? ''} />
+						<Input
+							id="logoUrl"
+							name="logoUrl"
+							type="url"
+							placeholder="https://cdn.example.com/logo.webp"
+							value={data.event.logoUrl ?? ''}
+						/>
 						<p class="text-xs text-muted-foreground">
 							CDN link to the event logo shown to participants. Leave blank for the default.
 						</p>
 					</div>
 					<div class="flex flex-col gap-1.5">
 						<Label for="backgroundUrl">Background URL</Label>
-						<Input id="backgroundUrl" name="backgroundUrl" type="url" placeholder="https://cdn.example.com/card-art.webp" value={data.event.backgroundUrl ?? ''} />
+						<Input
+							id="backgroundUrl"
+							name="backgroundUrl"
+							type="url"
+							placeholder="https://cdn.example.com/card-art.webp"
+							value={data.event.backgroundUrl ?? ''}
+						/>
 						<p class="text-xs text-muted-foreground">
 							CDN link to the art shown behind the flow cards. Leave blank for the default.
 						</p>
@@ -113,14 +129,24 @@
 				</div>
 				<div class="flex flex-col gap-1.5">
 					<Label for="tagline">Tagline</Label>
-					<Input id="tagline" name="tagline" placeholder="A hackathon in Europe's techno capital" value={data.event.tagline ?? ''} />
+					<Input
+						id="tagline"
+						name="tagline"
+						placeholder="A hackathon in Europe's techno capital"
+						value={data.event.tagline ?? ''}
+					/>
 					<p class="text-xs text-muted-foreground">
 						Short caption shown under the event name on the picker card. Leave blank to omit.
 					</p>
 				</div>
 				<div class="flex flex-col gap-1.5">
 					<Label for="checklistItems">Pre-submission checklist (one item per line)</Label>
-					<Textarea id="checklistItems" name="checklistItems" rows={4} value={data.event.checklistItems.join('\n')} />
+					<Textarea
+						id="checklistItems"
+						name="checklistItems"
+						rows={4}
+						value={data.event.checklistItems.join('\n')}
+					/>
 				</div>
 				<div class="flex items-center gap-3">
 					<Button type="submit">Save settings</Button>

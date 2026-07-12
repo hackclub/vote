@@ -111,8 +111,7 @@ export const actions: Actions = {
 		// Keep Airtable in step when editing an already-submitted project.
 		if (removedRecords.length > 0) {
 			void deleteAirtableRecords(
-				ctx.event.airtableBaseId,
-				ctx.event.airtableTableId,
+				ctx.event.id,
 				removedRecords.map((r) => r.airtableRecordId!)
 			);
 		}

@@ -26,11 +26,19 @@
 		localStorage.setItem('admin-theme', theme);
 	}
 
+	// Dialogs and dropdowns portal to <body>, outside this layout's wrapper div,
+	// so the theme class must live on <html> for portaled UI to inherit it.
+	$effect(() => {
+		document.documentElement.classList.toggle('dark', theme === 'dark');
+		return () => document.documentElement.classList.remove('dark');
+	});
+
 	function eventSubLinks(id: string) {
 		return [
 			{ href: `/admin/events/${id}`, label: 'Overview', exact: true },
 			{ href: `/admin/events/${id}/participants`, label: 'Participants' },
 			{ href: `/admin/events/${id}/projects`, label: 'Projects' },
+			{ href: `/admin/events/${id}/airtable`, label: 'Airtable Sync' },
 			{ href: `/admin/events/${id}/results`, label: 'Results' },
 			{ href: `/admin/events/${id}/admins`, label: 'Admins' }
 		];
@@ -45,10 +53,7 @@
 	<title>Admin · Vote</title>
 </svelte:head>
 
-<div
-	class:dark={theme === 'dark'}
-	class="flex min-h-screen bg-background font-sans text-foreground"
->
+<div class="flex min-h-screen bg-background font-sans text-foreground">
 	<aside class="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r bg-sidebar">
 		<div class="flex items-center border-b px-5 py-4">
 			<a href="/admin">

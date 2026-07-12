@@ -27,7 +27,12 @@ export const actions: Actions = {
 		const form = await request.formData();
 		const voteLimit = Number(form.get('voteLimit'));
 		const maxTeamSize = Number(form.get('maxTeamSize'));
-		if (!Number.isInteger(voteLimit) || voteLimit < 1 || !Number.isInteger(maxTeamSize) || maxTeamSize < 1) {
+		if (
+			!Number.isInteger(voteLimit) ||
+			voteLimit < 1 ||
+			!Number.isInteger(maxTeamSize) ||
+			maxTeamSize < 1
+		) {
 			return fail(400, { message: 'Vote limit and team size must be positive whole numbers' });
 		}
 		const checklistItems = String(form.get('checklistItems') ?? '')
@@ -57,8 +62,6 @@ export const actions: Actions = {
 				slug,
 				voteLimit,
 				maxTeamSize,
-				airtableBaseId: String(form.get('airtableBaseId') ?? '').trim() || null,
-				airtableTableId: String(form.get('airtableTableId') ?? '').trim() || null,
 				logoUrl: String(form.get('logoUrl') ?? '').trim() || null,
 				backgroundUrl: String(form.get('backgroundUrl') ?? '').trim() || null,
 				tagline: String(form.get('tagline') ?? '').trim() || null,

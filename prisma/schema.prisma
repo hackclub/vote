@@ -23,6 +23,21 @@ model Event {
   maxTeamSize     Int        @default(3)
   airtableBaseId  String?
   airtableTableId String?
+  /// Display names cached from the Airtable meta API when the sync is configured.
+  airtableBaseName  String?
+  airtableTableName String?
+  /// Airtable OAuth tokens for the account an event admin connected. The
+  /// refresh token rotates on every refresh; a null refresh token means the
+  /// event is not connected and syncs are skipped.
+  airtableAccessToken    String?
+  airtableRefreshToken   String?
+  airtableTokenExpiresAt DateTime?
+  /// Email of the event admin who connected the Airtable account.
+  airtableConnectedBy String?
+  /// Field mapping chosen in the sync wizard: app field key → the target
+  /// Airtable field ({ id, name }). Null falls back to matching the default
+  /// field names (see src/lib/airtable-sync-fields.ts).
+  airtableFieldMap Json?
   logoUrl         String?
   backgroundUrl   String?
   tagline         String?

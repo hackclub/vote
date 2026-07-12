@@ -181,9 +181,9 @@
 							: [rot(found[0] ?? base, -0.8), found[0] ?? base, rot(found[0] ?? base, 0.8)];
 				meshPalette = [
 					hsl(base.h, sat(base.s, 0.3, 0.7), 0.16),
-					hsl(blobs[0].h, sat(blobs[0].s, 0.5, 0.85), 0.46),
-					hsl(blobs[1].h, sat(blobs[1].s, 0.5, 0.85), 0.52),
-					hsl(blobs[2].h, sat(blobs[2].s, 0.5, 0.85), 0.58)
+					hsl(blobs[0].h, sat(blobs[0].s, 0.5, 0.85), 0.5),
+					hsl(blobs[1].h, sat(blobs[1].s, 0.5, 0.85), 0.56),
+					hsl(blobs[2].h, sat(blobs[2].s, 0.5, 0.85), 0.62)
 				];
 			} catch {
 				// Canvas tainted (no CORS on the image host) — keep the default palette.

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import FlowCard from '$lib/components/participant/FlowCard.svelte';
 </script>
 
@@ -9,8 +10,8 @@
 <FlowCard>
 	<div class="flex h-full flex-col items-center px-6">
 		<img
-			src="/brand/crux-logo.webp"
-			alt="Horizons Crux"
+			src={page.data.logoUrl}
+			alt="Event logo"
 			class="mt-16 h-[190px] w-[327px] object-contain drop-shadow-sm"
 		/>
 		<p class="mt-auto text-xl font-semibold">Vote for Horizons Crux!</p>

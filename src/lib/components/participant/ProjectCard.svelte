@@ -3,6 +3,7 @@
 	// backdrop tinted by the project's screenshot, a "Card Foil" shader layer,
 	// and a pointer-tracked 3D tilt.
 	import { Spring } from 'svelte/motion';
+	import { page } from '$app/state';
 	import { Play, ExternalLink } from '@lucide/svelte';
 	import LavaLampMesh, { DEFAULT_PALETTE, type Palette } from './LavaLampMesh.svelte';
 	import CardFoil from './CardFoil.svelte';
@@ -165,8 +166,8 @@
 
 		<div class="relative z-10 flex h-full flex-col p-4">
 			<img
-				src="/brand/crux-logo.webp"
-				alt="Horizons Crux"
+				src={page.data.logoUrl ?? '/brand/crux-logo.webp'}
+				alt="Event logo"
 				class="{size === 'lg'
 					? 'h-11'
 					: 'h-7'} w-auto self-start object-contain brightness-0 invert"

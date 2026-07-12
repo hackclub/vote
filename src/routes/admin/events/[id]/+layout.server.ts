@@ -22,6 +22,8 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
 			maxTeamSize: event.maxTeamSize,
 			airtableBaseId: event.airtableBaseId,
 			airtableTableId: event.airtableTableId,
+			logoUrl: event.logoUrl,
+			backgroundUrl: event.backgroundUrl,
 			checklistItems: event.checklistItems,
 			counts: event._count
 		}

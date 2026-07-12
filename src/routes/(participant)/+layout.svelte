@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 
-	let { children } = $props();
+	let { children, data } = $props();
 
 	const showCruxLogo = $derived(!page.url.pathname.startsWith('/login'));
 </script>
@@ -24,8 +24,8 @@
 	</div>
 	{#if showCruxLogo}
 		<img
-			src="/brand/crux-logo.webp"
-			alt="Horizons Crux"
+			src={data.logoUrl}
+			alt="Event logo"
 			class="absolute top-4 right-4 z-10 h-20 w-[137px] object-contain"
 		/>
 	{/if}

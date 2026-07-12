@@ -80,7 +80,7 @@
   "maxTeamSize": 3,
   "logoUrl": "https://cdn.hackclub.com/example/logo.webp",
   "backgroundUrl": "https://cdn.hackclub.com/example/background.webp",
-  "checklistItems": ["Add teams", "Add projects", "Open voting"],
+  "checklistItems": ["My project has a working, playable demo", "..."],
   "createdAt": "2026-07-11T00:00:00.000Z",
   "adminUrl": "${origin}/admin/events/cmcz1234567890abcdef",
   "galleryUrl": "${origin}/gallery/scrapyard-austin"
@@ -130,6 +130,8 @@
 			</Card.Title>
 			<Card.Description>
 				Creates a new event in the DRAFT stage and returns it with admin and gallery URLs.
+				Idempotent by slug: if an event with the same slug already exists, it is returned
+				unchanged instead of creating a duplicate.
 			</Card.Description>
 		</Card.Header>
 		<Card.Content class="flex flex-col gap-6">
@@ -166,7 +168,13 @@
 			</div>
 
 			<div class="flex flex-col gap-2">
-				<h3 class="text-sm font-medium">Example response — 201 Created</h3>
+				<h3 class="text-sm font-medium">Example response</h3>
+				<p class="text-sm text-muted-foreground">
+					A newly created event returns <span class="font-mono">201 Created</span>. An
+					existing event with the same slug is returned with <span class="font-mono"
+						>200 OK</span
+					> and the same body shape, so callers can tell the two apart.
+				</p>
 				<pre
 					class="overflow-x-auto rounded-md border bg-muted px-4 py-3 font-mono text-xs leading-relaxed"><code
 						>{responseExample}</code
@@ -189,6 +197,61 @@
 					</Table.Header>
 					<Table.Body>
 						{#each errors as e (e.status)}
+							<Table.Row>
+								<Table.Cell class="font-mono text-xs">{e.status}</Table.Cell>
+								<Table.Cell class="text-muted-foreground">{e.cause}</Table.Cell>
+							</Table.Row>
+						{/each}
+					</Table.Body>
+				</Table.Root>
+			</div>
+		</Card.Content>
+	</Card.Root>
+
+	<Card.Root>
+		<Card.Header>
+			<Card.Title class="flex items-center gap-2">
+				<Badge variant="secondary">GET</Badge>
+				<code class="font-mono text-sm">/api/v1/events/&lbrace;slug&rbrace;</code>
+			</Card.Title>
+			<Card.Description>
+				Looks up a single event by slug and returns it in the same shape as the POST response.
+				Use it to check whether an event exists without attempting a write.
+			</Card.Description>
+		</Card.Header>
+		<Card.Content class="flex flex-col gap-6">
+			<div class="flex flex-col gap-2">
+				<h3 class="text-sm font-medium">Example request</h3>
+				<pre
+					class="overflow-x-auto rounded-md border bg-muted px-4 py-3 font-mono text-xs leading-relaxed"><code
+						>{getCurlExample}</code
+					></pre>
+			</div>
+
+			<div class="flex flex-col gap-2">
+				<h3 class="text-sm font-medium">Example response — 200 OK</h3>
+				<pre
+					class="overflow-x-auto rounded-md border bg-muted px-4 py-3 font-mono text-xs leading-relaxed"><code
+						>{responseExample}</code
+					></pre>
+			</div>
+
+			<div class="flex flex-col gap-2">
+				<h3 class="text-sm font-medium">Errors</h3>
+				<p class="text-sm text-muted-foreground">
+					Errors are JSON objects with a <code
+						class="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">message</code
+					> field.
+				</p>
+				<Table.Root>
+					<Table.Header>
+						<Table.Row>
+							<Table.Head class="w-24">Status</Table.Head>
+							<Table.Head>Cause</Table.Head>
+						</Table.Row>
+					</Table.Header>
+					<Table.Body>
+						{#each getErrors as e (e.status)}
 							<Table.Row>
 								<Table.Cell class="font-mono text-xs">{e.status}</Table.Cell>
 								<Table.Cell class="text-muted-foreground">{e.cause}</Table.Cell>

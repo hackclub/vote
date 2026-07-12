@@ -39,7 +39,9 @@
 			</div>
 
 			<div class="flex flex-col gap-1.5">
-				<label for="repoUrl" class="text-xs text-[#ccc]">Github link to your project</label>
+				<label for="repoUrl" class="text-xs text-[#ccc]"
+					>Git repository (GitHub) link to your project</label
+				>
 				<input
 					id="repoUrl"
 					name="repoUrl"
@@ -49,7 +51,8 @@
 					class="h-10 w-full rounded-xl border border-white bg-transparent px-3 text-base text-white placeholder-[#999] transition-shadow duration-150 focus:ring-1 focus:ring-inset focus:ring-white"
 				/>
 				<p class="text-[10px] leading-tight text-[#999]">
-					Should be a valid and working, accessible GitHub (or GitLab) repository.
+					Should be a valid and working, accessible git repository — GitHub, GitLab, Codeberg,
+					Bitbucket, etc.
 				</p>
 			</div>
 		</div>

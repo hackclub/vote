@@ -25,7 +25,7 @@
 
 	<div class="absolute top-4 left-4 z-10">
 		<img
-			src="/brand/votelogo.svg"
+			src="/brand/logo-lm.svg"
 			alt="Hack Club Horizons — VOTE!"
 			class="h-[79px] w-[194px] object-contain object-left"
 		/>

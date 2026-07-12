@@ -20,11 +20,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		project.team.members.map((m) => m.participant.slackId).filter((id) => id !== null)
 	);
 	const makers = project.team.members
-		.map(
-			(m) =>
-				(m.participant.slackId && displayNames.get(m.participant.slackId)) ||
-				`${m.participant.firstName ?? ''} ${m.participant.lastName ?? ''}`.trim()
-		)
+		.map((m) => (m.participant.slackId && displayNames.get(m.participant.slackId)) || '')
 		.filter(Boolean);
 
 	return {

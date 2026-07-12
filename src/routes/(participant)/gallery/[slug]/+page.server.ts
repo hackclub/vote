@@ -3,8 +3,9 @@ import { prisma } from '$lib/server/db';
 import { getDisplayNames } from '$lib/server/cachet';
 import type { PageServerLoad } from './$types';
 
-// Public read-only gallery — no auth. Never expose participant emails here;
-// makers show their Slack display name (via cachet), falling back to real name.
+// Public read-only gallery — no auth. Real names and emails must never appear
+// here (they're for logged-in voters only); makers show only their Slack
+// display name via cachet, or "Anonymous".
 export const load: PageServerLoad = async ({ params }) => {
 	const event = await prisma.event.findUnique({ where: { slug: params.slug } });
 	if (!event) error(404, 'Event not found');
@@ -24,11 +25,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		slug: event.slug,
 		projects: projects.map((p) => {
 			const makers = p.team.members
-				.map(
-					(m) =>
-						(m.participant.slackId && displayNames.get(m.participant.slackId)) ||
-						`${m.participant.firstName ?? ''} ${m.participant.lastName ?? ''}`.trim()
-				)
+				.map((m) => (m.participant.slackId && displayNames.get(m.participant.slackId)) || '')
 				.filter(Boolean);
 			return {
 				id: p.id,

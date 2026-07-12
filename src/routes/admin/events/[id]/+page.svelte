@@ -96,6 +96,20 @@
 						<Label for="airtableTableId">Airtable table ID</Label>
 						<Input id="airtableTableId" name="airtableTableId" placeholder="tblXXXXXXXXXXXXXX" value={data.event.airtableTableId ?? ''} />
 					</div>
+					<div class="flex flex-col gap-1.5">
+						<Label for="logoUrl">Logo URL</Label>
+						<Input id="logoUrl" name="logoUrl" type="url" placeholder="https://cdn.example.com/logo.webp" value={data.event.logoUrl ?? ''} />
+						<p class="text-xs text-muted-foreground">
+							CDN link to the event logo shown to participants. Leave blank for the default.
+						</p>
+					</div>
+					<div class="flex flex-col gap-1.5">
+						<Label for="backgroundUrl">Background URL</Label>
+						<Input id="backgroundUrl" name="backgroundUrl" type="url" placeholder="https://cdn.example.com/card-art.webp" value={data.event.backgroundUrl ?? ''} />
+						<p class="text-xs text-muted-foreground">
+							CDN link to the art shown behind the flow cards. Leave blank for the default.
+						</p>
+					</div>
 				</div>
 				<div class="flex flex-col gap-1.5">
 					<Label for="checklistItems">Pre-submission checklist (one item per line)</Label>

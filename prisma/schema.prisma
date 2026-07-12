@@ -23,6 +23,8 @@ model Event {
   maxTeamSize     Int        @default(3)
   airtableBaseId  String?
   airtableTableId String?
+  logoUrl         String?
+  backgroundUrl   String?
   checklistItems  String[]
   createdAt       DateTime   @default(now())
 

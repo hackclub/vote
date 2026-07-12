@@ -1,10 +1,30 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { Badge } from '$lib/components/ui/badge';
+	import Moon from '@lucide/svelte/icons/moon';
+	import Sun from '@lucide/svelte/icons/sun';
 
 	let { data, children } = $props();
 
 	const activeEventId = $derived(page.params.id);
+
+	let theme = $state<'light' | 'dark'>('light');
+
+	onMount(() => {
+		const stored = localStorage.getItem('admin-theme');
+		theme =
+			stored === 'dark' || stored === 'light'
+				? stored
+				: window.matchMedia('(prefers-color-scheme: dark)').matches
+					? 'dark'
+					: 'light';
+	});
+
+	function toggleTheme() {
+		theme = theme === 'dark' ? 'light' : 'dark';
+		localStorage.setItem('admin-theme', theme);
+	}
 
 	function eventSubLinks(id: string) {
 		return [
@@ -25,7 +45,7 @@
 	<title>Admin · Votes</title>
 </svelte:head>
 
-<div class="flex min-h-screen bg-background font-sans text-foreground">
+<div class:dark={theme === 'dark'} class="flex min-h-screen bg-background font-sans text-foreground">
 	<aside class="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r bg-sidebar">
 		<div class="flex items-center justify-between border-b px-5 py-4">
 			<a href="/admin" class="text-sm font-semibold tracking-tight">Votes Admin</a>
@@ -79,7 +99,22 @@
 		</nav>
 
 		<div class="border-t p-4">
-			<p class="truncate text-xs text-muted-foreground">{data.adminEmail}</p>
+			<div class="flex items-center justify-between gap-2">
+				<p class="truncate text-xs text-muted-foreground">{data.adminEmail}</p>
+				<button
+					type="button"
+					onclick={toggleTheme}
+					title="Toggle theme"
+					aria-label="Toggle theme"
+					class="flex shrink-0 cursor-pointer items-center justify-center rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+				>
+					{#if theme === 'dark'}
+						<Sun class="size-4" />
+					{:else}
+						<Moon class="size-4" />
+					{/if}
+				</button>
+			</div>
 			<form method="POST" action="/auth/logout" class="mt-1">
 				<button type="submit" class="cursor-pointer text-xs text-muted-foreground hover:text-foreground">
 					Sign out

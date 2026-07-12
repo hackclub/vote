@@ -1,6 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { prisma } from '$lib/server/db';
 import { fetchAttendRoster } from '$lib/server/attend';
+import { requireEventAdmin } from '$lib/server/admin';
 import type { Actions, PageServerLoad } from './$types';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -30,7 +31,8 @@ export const load: PageServerLoad = async ({ params }) => {
 };
 
 export const actions: Actions = {
-	sync: async ({ params }) => {
+	sync: async ({ params, locals }) => {
+		await requireEventAdmin(locals.user, params.id);
 		const event = await prisma.event.findUnique({
 			where: { id: params.id },
 			select: { slug: true }
@@ -85,7 +87,8 @@ export const actions: Actions = {
 		};
 	},
 
-	add: async ({ params, request }) => {
+	add: async ({ params, locals, request }) => {
+		await requireEventAdmin(locals.user, params.id);
 		const form = await request.formData();
 		const email = String(form.get('email') ?? '').toLowerCase().trim();
 		if (!EMAIL_RE.test(email)) return fail(400, { message: 'Enter a valid email.' });
@@ -105,7 +108,8 @@ export const actions: Actions = {
 		return { added: email };
 	},
 
-	remove: async ({ params, request }) => {
+	remove: async ({ params, locals, request }) => {
+		await requireEventAdmin(locals.user, params.id);
 		const form = await request.formData();
 		const id = String(form.get('id'));
 		await prisma.participant.deleteMany({ where: { id, eventId: params.id } });

@@ -15,7 +15,15 @@ const schema = z.object({
 		.trim()
 		.min(1, 'Tell us what your project is about')
 		.max(500, 'Max 500 characters'),
-	screenshotUrl: z.string().url('Upload a screenshot of your project')
+	// Site-relative dev uploads arrive here prefixed with http://localhost, so
+	// requiring http(s) covers both cases while rejecting javascript:/data: URLs.
+	screenshotUrl: z
+		.string()
+		.url('Upload a screenshot of your project')
+		.refine(
+			(u) => u.startsWith('http://') || u.startsWith('https://'),
+			'Upload a screenshot of your project'
+		)
 });
 
 export const actions: Actions = {

@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { z } from 'zod';
 import { prisma } from '$lib/server/db';
 import { syncProjectToAirtable } from '$lib/server/airtable';
+import { requireEventAdmin } from '$lib/server/admin';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -38,11 +39,16 @@ export const load: PageServerLoad = async ({ params }) => {
 	};
 };
 
+// http(s) only — these render as hrefs/srcs on public pages, so a javascript:
+// URL here would be stored XSS.
 const optionalUrl = z
 	.string()
 	.trim()
 	.transform((s) => s || null)
-	.pipe(z.string().url().nullable());
+	.pipe(z.string().url().nullable())
+	.refine((u) => u === null || u.startsWith('http://') || u.startsWith('https://'), {
+		message: 'Links must start with http:// or https://'
+	});
 
 const schema = z.object({
 	name: z.string().trim().max(50),
@@ -53,7 +59,8 @@ const schema = z.object({
 });
 
 export const actions: Actions = {
-	save: async ({ params, request }) => {
+	save: async ({ params, locals, request }) => {
+		await requireEventAdmin(locals.user, params.id);
 		const form = await request.formData();
 		const parsed = schema.safeParse({
 			name: String(form.get('name') ?? ''),
@@ -97,7 +104,8 @@ export const actions: Actions = {
 		return { saved: true };
 	},
 
-	delete: async ({ params }) => {
+	delete: async ({ params, locals }) => {
+		await requireEventAdmin(locals.user, params.id);
 		const project = await prisma.project.findUnique({ where: { id: params.projectId } });
 		if (!project || project.eventId !== params.id) error(404);
 		// Deleting the team cascades to members, project, votes, and airtable tracking rows.

@@ -1,5 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import { prisma } from '$lib/server/db';
+import { requireEventAdmin } from '$lib/server/admin';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => ({});
@@ -7,7 +8,8 @@ export const load: PageServerLoad = async () => ({});
 const STAGES = ['DRAFT', 'SUBMISSION', 'VOTING', 'CLOSED'] as const;
 
 export const actions: Actions = {
-	stage: async ({ params, request }) => {
+	stage: async ({ params, locals, request }) => {
+		await requireEventAdmin(locals.user, params.id);
 		const form = await request.formData();
 		const stage = String(form.get('stage'));
 		if (!STAGES.includes(stage as (typeof STAGES)[number])) {
@@ -20,7 +22,8 @@ export const actions: Actions = {
 		return { staged: true };
 	},
 
-	settings: async ({ params, request }) => {
+	settings: async ({ params, locals, request }) => {
+		await requireEventAdmin(locals.user, params.id);
 		const form = await request.formData();
 		const voteLimit = Number(form.get('voteLimit'));
 		const maxTeamSize = Number(form.get('maxTeamSize'));

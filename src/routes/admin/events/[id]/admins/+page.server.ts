@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import { prisma } from '$lib/server/db';
-import { superadminEmails } from '$lib/server/admin';
+import { requireEventAdmin, superadminEmails } from '$lib/server/admin';
 import type { Actions, PageServerLoad } from './$types';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -20,6 +20,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 export const actions: Actions = {
 	grant: async ({ params, locals, request }) => {
+		await requireEventAdmin(locals.user, params.id);
 		const form = await request.formData();
 		const email = String(form.get('email') ?? '')
 			.toLowerCase()
@@ -37,7 +38,8 @@ export const actions: Actions = {
 		return { granted: email };
 	},
 
-	revoke: async ({ params, request }) => {
+	revoke: async ({ params, locals, request }) => {
+		await requireEventAdmin(locals.user, params.id);
 		const form = await request.formData();
 		const email = String(form.get('email') ?? '')
 			.toLowerCase()

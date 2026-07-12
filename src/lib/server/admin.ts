@@ -1,3 +1,4 @@
+import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import { prisma } from './db';
 import type { User } from '../../generated/prisma/client';
@@ -59,4 +60,14 @@ export async function canAccessEvent(user: User | null, eventId: string): Promis
 		where: { eventId_email: { eventId, email: user.email.toLowerCase().trim() } }
 	});
 	return row != null;
+}
+
+/**
+ * Throws 404 unless the user may manage the given event. Form actions run
+ * without layout loads, so every event-scoped action must call this itself —
+ * the layout guard only protects page renders. 404 (not 403) so event IDs
+ * aren't confirmed to non-admins.
+ */
+export async function requireEventAdmin(user: User | null, eventId: string): Promise<void> {
+	if (!(await canAccessEvent(user, eventId))) error(404, 'Not found');
 }

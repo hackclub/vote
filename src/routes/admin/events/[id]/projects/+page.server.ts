@@ -1,5 +1,7 @@
+import { fail } from '@sveltejs/kit';
 import { prisma } from '$lib/server/db';
 import { syncProjectToAirtable } from '$lib/server/airtable';
+import { requireEventAdmin } from '$lib/server/admin';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -43,16 +45,20 @@ export const load: PageServerLoad = async ({ params }) => {
 };
 
 export const actions: Actions = {
-	resync: async ({ request }) => {
+	resync: async ({ params, locals, request }) => {
+		await requireEventAdmin(locals.user, params.id);
 		const form = await request.formData();
 		const projectId = String(form.get('projectId'));
+		const project = await prisma.project.findUnique({ where: { id: projectId } });
+		if (!project || project.eventId !== params.id) return fail(404, { message: 'Project not found.' });
 		await syncProjectToAirtable(projectId);
 		return { resynced: true };
 	},
 
 	// syncProjectToAirtable never throws — per-project errors land in
 	// syncError and show up in the Airtable status column.
-	resyncAll: async ({ params }) => {
+	resyncAll: async ({ params, locals }) => {
+		await requireEventAdmin(locals.user, params.id);
 		const projects = await prisma.project.findMany({
 			where: { eventId: params.id, submittedAt: { not: null } },
 			select: { id: true }

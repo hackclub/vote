@@ -1,4 +1,4 @@
-# Votes
+# Vote
 
 Hackathon voting platform for **Hack Club Horizons Crux**. Participants sign in
 with Hack Club Auth, form teams, submit projects (mirrored into Airtable — one

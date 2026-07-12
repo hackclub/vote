@@ -26,6 +26,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 # adapter-node listens on 0.0.0.0:3000 by default; make the port configurable
 ENV PORT=3000
+# /api/screenshot accepts files up to 5 GB (Airtable's URL-attachment ceiling);
+# adapter-node otherwise rejects bodies over 512 KB before the handler runs
+ENV BODY_SIZE_LIMIT=6G
 
 # Bring over the built server, production deps, and Prisma runtime files.
 # prisma.config.ts is required by the CLI to resolve DATABASE_URL for migrations.

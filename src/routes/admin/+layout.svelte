@@ -22,13 +22,13 @@
 </script>
 
 <svelte:head>
-	<title>Admin · Votes</title>
+	<title>Admin · Vote</title>
 </svelte:head>
 
 <div class="flex min-h-screen bg-background font-sans text-foreground">
 	<aside class="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r bg-sidebar">
 		<div class="flex items-center justify-between border-b px-5 py-4">
-			<a href="/admin" class="text-sm font-semibold tracking-tight">Votes Admin</a>
+			<a href="/admin" class="text-sm font-semibold tracking-tight">Vote Admin</a>
 			{#if data.superadmin}
 				<Badge variant="secondary" class="text-[10px]">Superadmin</Badge>
 			{/if}

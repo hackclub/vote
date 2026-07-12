@@ -65,7 +65,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		throw e;
 	}
 
-	const origin = (env.APP_ORIGIN || url.origin).replace(/\/+$/, '');
+	const origin = (env.APP_ORIGIN || url.origin).trim().replace(/\/+$/, '');
 	return json(
 		{
 			id: event.id,

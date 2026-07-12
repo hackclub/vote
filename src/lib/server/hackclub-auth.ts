@@ -7,7 +7,7 @@ const AUTH_BASE = 'https://auth.hackclub.com';
 export const OAUTH_SCOPES = 'openid profile email slack_id';
 
 /** Must match the redirect URI registered in the Hack Club Auth dashboard. */
-export const redirectUri = () => `${env.APP_ORIGIN.replace(/\/+$/, '')}/oauth/callback`;
+export const redirectUri = () => `${env.APP_ORIGIN.trim().replace(/\/+$/, '')}/oauth/callback`;
 
 export function authorizeUrl(state: string): string {
 	const params = new URLSearchParams({

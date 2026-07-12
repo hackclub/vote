@@ -95,12 +95,15 @@
 	// Cards without a screenshot (or whose screenshot fails to load) used to
 	// all share the same teal default ramp; rotate its hues by the card seed
 	// so each fallback card gets its own color family.
+	// Saturation and lightness are trimmed slightly below the Figma default —
+	// the white card text renders directly over the mesh, and the full-strength
+	// ramp costs legibility.
 	const fallbackPalette = $derived.by(() => {
 		const d = hash01(name + '/hue') * 6;
 		return DEFAULT_PALETTE.map(([r, g, b]) => {
 			const { h, s } = hueSat(r, g, b);
 			const l = (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
-			return hsl((h + d) % 6, s, l);
+			return hsl((h + d) % 6, s * 0.85, l * 0.9);
 		}) as Palette;
 	});
 
@@ -220,11 +223,14 @@
 						: found.length === 2
 							? [found[0], found[1], third]
 							: [rot(anchor, -spread), anchor, third];
+				// Blob lightness/saturation sit slightly below where the raw
+				// screenshot colors would land — the white card text renders
+				// directly over the mesh, and brighter stops cost legibility.
 				meshPalette = [
 					hsl(base.h, sat(base.s, 0.3, 0.65), 0.16),
-					hsl(blobs[0].h, sat(blobs[0].s, 0.45, 0.75), 0.5),
-					hsl(blobs[1].h, sat(blobs[1].s, 0.45, 0.75), 0.56),
-					hsl(blobs[2].h, sat(blobs[2].s, 0.45, 0.75), 0.62)
+					hsl(blobs[0].h, sat(blobs[0].s, 0.42, 0.68), 0.44),
+					hsl(blobs[1].h, sat(blobs[1].s, 0.42, 0.68), 0.5),
+					hsl(blobs[2].h, sat(blobs[2].s, 0.42, 0.68), 0.55)
 				];
 			} catch {
 				// Canvas tainted (no CORS on the image host) — fall back to the

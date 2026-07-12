@@ -25,6 +25,9 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	return {
 		slug: event.slug,
+		// See the gallery load: public page, branding must follow the slug's event.
+		logoUrl: event.logoUrl,
+		backgroundUrl: event.backgroundUrl,
 		project: {
 			name: project.name,
 			description: project.description,

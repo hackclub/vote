@@ -23,6 +23,11 @@ export const load: PageServerLoad = async ({ params }) => {
 	return {
 		eventName: event.name,
 		slug: event.slug,
+		// Override the layout's user-based branding: the gallery is public and
+		// keyed by slug, so it must show this event's logo/background regardless
+		// of who's viewing.
+		logoUrl: event.logoUrl,
+		backgroundUrl: event.backgroundUrl,
 		projects: projects.map((p) => {
 			const makers = p.team.members
 				.map((m) => (m.participant.slackId && displayNames.get(m.participant.slackId)) || '')

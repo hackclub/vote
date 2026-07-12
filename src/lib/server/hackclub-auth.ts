@@ -1,6 +1,5 @@
 import { env } from '$env/dynamic/private';
 import { prisma } from './db';
-import { lookupAttendParticipant } from './attend';
 import type { User } from '../../generated/prisma/client';
 
 const AUTH_BASE = 'https://auth.hackclub.com';
@@ -80,7 +79,12 @@ export async function fetchIdentity(accessToken: string): Promise<HackClubIdenti
 	};
 }
 
-/** Upserts the user and links any allowlisted Participant rows that match their email. */
+/**
+ * Upserts the user and links any whitelisted Participant rows that match their
+ * email. Participants are NOT created here — a user must already be on the
+ * event whitelist (populated by the admin "Sync from Attend" roster import).
+ * Signing in only claims a pre-existing row; unknown users get no access.
+ */
 export async function signIn(identity: HackClubIdentity, tokens: TokenResponse): Promise<User> {
 	const fields = {
 		email: identity.email,
@@ -119,53 +123,5 @@ export async function signIn(identity: HackClubIdentity, tokens: TokenResponse):
 		});
 	}
 
-	await provisionAttendParticipation(user);
-
 	return user;
-}
-
-/**
- * Ask the Attend API whether this user is a registered participant of each
- * event and, if so, ensure a linked Participant row exists. The event's slug
- * doubles as its Attend slug. This replaces the manual CSV allowlist as the
- * source of participation. The API key is scoped to one Attend event, so
- * lookups against other events fail closed (403 → null → skipped).
- * Failures are logged but never block sign-in.
- */
-async function provisionAttendParticipation(user: User): Promise<void> {
-	try {
-		const events = await prisma.event.findMany({ select: { id: true, slug: true } });
-		if (events.length === 0) return;
-
-		const [firstName, ...rest] = (user.name ?? '').trim().split(/\s+/);
-		const lastName = rest.join(' ');
-
-		await Promise.all(
-			events.map(async (event) => {
-				const lookup = await lookupAttendParticipant(event.slug, user.email);
-				if (!lookup?.registered) return;
-				if (lookup.status === 'withdrawn' || lookup.status === 'rejected') return;
-				const attendCompleted = lookup.status === 'complete';
-				await prisma.participant.upsert({
-					where: { eventId_email: { eventId: event.id, email: user.email } },
-					create: {
-						eventId: event.id,
-						email: user.email,
-						userId: user.id,
-						firstName: firstName || null,
-						lastName: lastName || null,
-						slackId: user.slackId,
-						attendCompleted
-					},
-					update: {
-						userId: user.id,
-						...(user.slackId ? { slackId: user.slackId } : {}),
-						...(lookup.status ? { attendCompleted } : {})
-					}
-				});
-			})
-		);
-	} catch (e) {
-		console.error('[attend] provisioning participation failed:', e);
-	}
 }

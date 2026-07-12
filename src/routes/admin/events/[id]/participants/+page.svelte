@@ -16,8 +16,9 @@
 			<Card.Title>Sync participants from Attend</Card.Title>
 			<Card.Description>
 				Pulls the roster for <code>{data.event.slug}</code> from Attend (the event slug must match
-				the Attend event slug). Existing emails are skipped; withdrawn registrations are never
-				included. Participants also get added automatically when they sign in.
+				the Attend event slug). Only confirmed registrations who have checked in on-site are
+				imported; existing emails are updated in place. Participants also get added automatically
+				when they sign in.
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
@@ -26,9 +27,10 @@
 			</form>
 			{#if form?.synced}
 				<p class="mt-3 text-sm">
-					Added <strong>{form.synced.added}</strong>, skipped
-					<strong>{form.synced.skipped}</strong> already present ({form.synced.total} on the
-					Attend roster).
+					Added <strong>{form.synced.added}</strong>,
+					<strong>{form.synced.alreadyPresent}</strong> already present, skipped
+					<strong>{form.synced.skipped}</strong> not confirmed / not checked in ({form.synced.total}
+					on the Attend roster).
 				</p>
 			{/if}
 			{#if form?.message}

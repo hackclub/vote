@@ -46,9 +46,12 @@ export const actions: Actions = {
 			return fail(502, { message: e instanceof Error ? e.message : 'Attend roster fetch failed.' });
 		}
 
+		// Only import confirmed registrations who have actually checked in on-site.
+		const eligible = roster.filter((p) => p.status === 'complete' && p.checkedInAt);
+
 		// Upsert (not createMany) so existing rows pick up name/slackId changes.
 		const existing = await prisma.participant.count({ where: { eventId: params.id } });
-		for (const p of roster) {
+		for (const p of eligible) {
 			await prisma.participant.upsert({
 				where: { eventId_email: { eventId: params.id, email: p.email } },
 				create: {
@@ -70,11 +73,13 @@ export const actions: Actions = {
 			});
 		}
 		const total = await prisma.participant.count({ where: { eventId: params.id } });
+		const added = total - existing;
 
 		return {
 			synced: {
-				added: total - existing,
-				skipped: roster.length - (total - existing),
+				added,
+				alreadyPresent: eligible.length - added,
+				skipped: roster.length - eligible.length,
 				total: roster.length
 			}
 		};

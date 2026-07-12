@@ -5,7 +5,7 @@
 	import { Spring } from 'svelte/motion';
 	import { page } from '$app/state';
 	import { Play, ExternalLink } from '@lucide/svelte';
-	import LavaLampMesh, { DEFAULT_PALETTE, type Palette } from './LavaLampMesh.svelte';
+	import LavaLampMesh, { type Palette } from './LavaLampMesh.svelte';
 	import CardFoil from './CardFoil.svelte';
 
 	let {
@@ -83,29 +83,31 @@
 		hover.target = 0;
 	}
 
-	// Derive the mesh gradient stops from the screenshot, deliberately
-	// multi-hue: bin the sampled pixels by hue (chroma²-weighted so saturated
-	// accents outvote washed-out backgrounds), pick the strongest distinct
-	// hues, and rebuild the ramp in the default palette's shape — a dark base
-	// plus three bright blob colors. Averaging pixels instead would collapse
-	// every stop toward the single dominant hue. Null means "no usable
-	// screenshot" and falls back to the seed-rotated default ramp below.
+	// Derive the mesh gradient stops from the screenshot's dominant hue
+	// (chroma²-weighted so saturated accents outvote washed-out backgrounds).
+	// Null means "no usable screenshot" and falls back to the seed-hued ramp
+	// below. Blob lightness/saturation sit slightly below where the raw
+	// screenshot colors would land — the white card text renders directly
+	// over the mesh, and brighter stops cost legibility.
 	let meshPalette = $state<Palette | null>(null);
 
-	// Cards without a screenshot (or whose screenshot fails to load) used to
-	// all share the same teal default ramp; rotate its hues by the card seed
-	// so each fallback card gets its own color family.
-	// Saturation and lightness are trimmed slightly below the Figma default —
-	// the white card text renders directly over the mesh, and the full-strength
-	// ramp costs legibility.
-	const fallbackPalette = $derived.by(() => {
-		const d = hash01(name + '/hue') * 6;
-		return DEFAULT_PALETTE.map(([r, g, b]) => {
-			const { h, s } = hueSat(r, g, b);
-			const l = (Math.max(r, g, b) + Math.min(r, g, b)) / 2;
-			return hsl((h + d) % 6, s * 0.85, l * 0.9);
-		}) as Palette;
-	});
+	// The ramp is one analogous sweep around an anchor hue: a dark base at
+	// the anchor and blobs at anchor−spread / anchor / anchor+spread. Each
+	// card stays a single color family, but the family spans a broad arc —
+	// turquoise→blue→purple rather than blue at three lightnesses.
+	const meshSpread = $derived(0.85 + hash01(name + '/spread') * 0.3); // hue/60° units
+	function sweepPalette(h: number, s: number): Palette {
+		return [
+			hsl(h, sat(s, 0.3, 0.65), 0.16),
+			hsl((h - meshSpread + 6) % 6, sat(s, 0.42, 0.68), 0.44),
+			hsl(h, sat(s, 0.42, 0.68), 0.5),
+			hsl((h + meshSpread) % 6, sat(s, 0.42, 0.68), 0.55)
+		];
+	}
+
+	// Cards without a usable screenshot pick their anchor hue from the seed,
+	// so each fallback card lands in its own color family.
+	const fallbackPalette = $derived(sweepPalette(hash01(name + '/hue') * 6, 0.55));
 
 	// h is HSL hue / 60°, in [0, 6).
 	function hueSat(r: number, g: number, b: number) {
@@ -176,65 +178,22 @@
 					sums[bin][2] += b * w;
 				}
 
-				// Strongest hues first; skip bins adjacent to a pick so each stop
-				// is a genuinely different hue, and stop at bins too weak to be
-				// more than a few stray pixels.
-				const ranked = [...weight.keys()].sort((a, b) => weight[b] - weight[a]);
-				const picked: number[] = [];
-				for (const bin of ranked) {
-					if (weight[bin] === 0 || weight[bin] < weight[ranked[0]] * 0.04) break;
-					if (picked.some((p) => Math.min(Math.abs(p - bin), BINS - Math.abs(p - bin)) <= 1)) {
-						continue;
-					}
-					picked.push(bin);
-					if (picked.length === 4) break;
-				}
-
-				// Grayscale screenshot: no hue to derive, use a neutral gray ramp.
-				const hues = picked.length
-					? picked.map((bin) => {
-							const w = weight[bin];
-							return hueSat(sums[bin][0] / w, sums[bin][1] / w, sums[bin][2] / w);
-						})
-					: [{ h: 0, s: 0 }];
-
-				// The dominant hue becomes the dark base and the remaining hues
-				// fill the three blob stops. Screenshots with fewer than three
-				// distinct hues (most are white plus one accent) get hues
-				// synthesized around what was found. The rotation is wide
-				// (±84°–120°, seed-varied per card) — analogous ±48° rotations
-				// kept the whole ramp inside one hue family, so cards read as
-				// a single color at three lightnesses.
-				const rot = (c: { h: number; s: number }, d: number) => ({ h: (c.h + d + 6) % 6, s: c.s });
-				const hueDist = (a: number, b: number) => Math.min(Math.abs(a - b), 6 - Math.abs(a - b));
-				const spread = 1.4 + hash01(name + '/spread') * 0.6; // hue/60° units
-				const base = hues[0];
-				const found = hues.slice(1);
-				const anchor = found[0] ?? base;
-				// Two found hues: rotate away from the side the second hue occupies
-				// so the synthesized third doesn't land on top of it.
-				const third =
-					found.length === 2 && hueDist(rot(found[0], spread).h, found[1].h) < 0.7
-						? rot(found[0], -spread)
-						: rot(anchor, spread);
-				const blobs =
-					found.length >= 3
-						? found.slice(0, 3)
-						: found.length === 2
-							? [found[0], found[1], third]
-							: [rot(anchor, -spread), anchor, third];
-				// Blob lightness/saturation sit slightly below where the raw
-				// screenshot colors would land — the white card text renders
-				// directly over the mesh, and brighter stops cost legibility.
-				meshPalette = [
-					hsl(base.h, sat(base.s, 0.3, 0.65), 0.16),
-					hsl(blobs[0].h, sat(blobs[0].s, 0.42, 0.68), 0.44),
-					hsl(blobs[1].h, sat(blobs[1].s, 0.42, 0.68), 0.5),
-					hsl(blobs[2].h, sat(blobs[2].s, 0.42, 0.68), 0.55)
-				];
+				// Only the strongest hue matters: the whole ramp is an analogous
+				// sweep around it. A grayscale screenshot has no hue vote and
+				// gets a neutral gray ramp (zero saturation survives the sweep).
+				const best = weight.indexOf(Math.max(...weight));
+				const dom =
+					weight[best] > 0
+						? hueSat(
+								sums[best][0] / weight[best],
+								sums[best][1] / weight[best],
+								sums[best][2] / weight[best]
+							)
+						: { h: 0, s: 0 };
+				meshPalette = sweepPalette(dom.h, dom.s);
 			} catch {
 				// Canvas tainted (no CORS on the image host) — fall back to the
-				// seed-rotated default ramp.
+				// seed-hued ramp.
 				meshPalette = null;
 			}
 		};

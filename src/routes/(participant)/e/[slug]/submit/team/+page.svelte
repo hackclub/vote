@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { pageTitle } from '$lib/branding';
+	import { backHref, stepNumber, SUBMIT_STEPS } from '$lib/submit-steps';
 	import FlowCard from '$lib/components/participant/FlowCard.svelte';
 	import SectionHeader from '$lib/components/participant/SectionHeader.svelte';
 	import CardButton from '$lib/components/participant/CardButton.svelte';
 	import { X } from '@lucide/svelte';
 
 	let { data, form } = $props();
+
+	const back = $derived(backHref(data.slug, 'team', !!data.project?.submittedAt));
 
 	type Member = { participantId: string; name: string; displayName: string | null };
 
@@ -74,12 +78,15 @@
 </script>
 
 <svelte:head>
-	<title>Your team · Horizons Crux</title>
+	<title>{pageTitle('Your team', data.eventName)}</title>
 </svelte:head>
 
 <FlowCard dim>
 	<form method="POST" use:enhance class="flex h-full flex-col px-6 pt-9 pb-6">
 		<SectionHeader
+			backHref={back}
+			step={stepNumber('team')}
+			totalSteps={SUBMIT_STEPS.length}
 			title="Add your team members"
 			subtitle="Only one team member needs to fill out the submission form"
 		/>

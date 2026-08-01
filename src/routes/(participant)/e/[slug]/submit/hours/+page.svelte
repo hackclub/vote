@@ -1,11 +1,15 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { onMount } from 'svelte';
+	import { pageTitle } from '$lib/branding';
+	import { backHref, stepNumber, SUBMIT_STEPS } from '$lib/submit-steps';
 	import FlowCard from '$lib/components/participant/FlowCard.svelte';
 	import SectionHeader from '$lib/components/participant/SectionHeader.svelte';
 	import CardButton from '$lib/components/participant/CardButton.svelte';
 
 	let { data, form } = $props();
+
+	const back = backHref(data.slug, 'hours');
 
 	const members = data.members ?? [];
 
@@ -34,12 +38,15 @@
 </script>
 
 <svelte:head>
-	<title>Hour estimates · Horizons Crux</title>
+	<title>{pageTitle('Hour estimates', data.eventName)}</title>
 </svelte:head>
 
 <FlowCard dim>
 	<form method="POST" use:enhance class="flex h-full flex-col px-6 pt-9 pb-6">
 		<SectionHeader
+			backHref={back}
+			step={stepNumber('hours')}
+			totalSteps={SUBMIT_STEPS.length}
 			title="Hour Estimates"
 			subtitle="How much time did your team spend on your projects?"
 		/>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pageTitle } from '$lib/branding';
 	import ProjectCard from '$lib/components/participant/ProjectCard.svelte';
 
 	let { data } = $props();
@@ -7,7 +8,7 @@
 </script>
 
 <svelte:head>
-	<title>Voting · Horizons Crux</title>
+	<title>{pageTitle('Voting', data.eventName)}</title>
 </svelte:head>
 
 <div class="w-[590px] max-w-full py-6">

@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import EventLogo from '$lib/components/participant/EventLogo.svelte';
 
 	let { children, data } = $props();
 
-	const showCruxLogo = $derived(!page.url.pathname.startsWith('/login'));
+	// The login screen shows the event logo full-size on its card instead.
+	const showEventLogo = $derived(!page.url.pathname.startsWith('/login'));
 </script>
 
 <div class="relative min-h-screen overflow-hidden bg-[#111] font-bricolage text-white">
@@ -22,12 +24,13 @@
 			class="h-[79px] w-[194px] object-contain object-left-top"
 		/>
 	</div>
-	{#if showCruxLogo}
-		<img
-			src={page.data.logoUrl}
-			alt="Event logo"
-			class="absolute top-4 right-4 z-10 h-20 w-[137px] object-contain"
-		/>
+	{#if showEventLogo}
+		<div class="absolute top-4 right-4 z-10 flex h-20 max-w-[45vw] items-center justify-end">
+			<EventLogo
+				class="h-20 w-[137px] object-contain object-right"
+				textClass="text-right text-lg font-semibold whitespace-nowrap text-white"
+			/>
+		</div>
 	{/if}
 	<main class="relative z-10 flex min-h-screen items-center justify-center px-4 py-28 lg:py-10">
 		{@render children()}

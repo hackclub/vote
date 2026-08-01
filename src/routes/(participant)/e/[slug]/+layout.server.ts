@@ -2,9 +2,10 @@ import { redirect } from '@sveltejs/kit';
 import { getParticipantContext } from '$lib/server/flow';
 import type { LayoutServerLoad } from './$types';
 
-// Platform fallbacks when an event hasn't set its own branding. The background
-// is the blurred art behind each flow/project card.
-const DEFAULT_LOGO = '/brand/crux-logo.webp';
+// Platform fallback for events that haven't set their own background — the
+// blurred art behind each flow/project card. There's deliberately no logo
+// fallback: an event without a logo shows its name instead of another event's
+// artwork (see EventLogo.svelte).
 const DEFAULT_BACKGROUND = '/brand/card-art.webp';
 
 export const load: LayoutServerLoad = async ({ locals, params }) => {
@@ -14,7 +15,9 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
 	if (!ctx) redirect(302, '/');
 
 	return {
-		logoUrl: ctx.event.logoUrl || DEFAULT_LOGO,
+		eventName: ctx.event.name,
+		logoUrl: ctx.event.logoUrl,
+		cardLogoMonochrome: ctx.event.cardLogoMonochrome,
 		backgroundUrl: ctx.event.backgroundUrl || DEFAULT_BACKGROUND
 	};
 };

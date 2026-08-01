@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pageTitle } from '$lib/branding';
 	import ProjectCard from '$lib/components/participant/ProjectCard.svelte';
 
 	let { data } = $props();
@@ -8,7 +9,7 @@
 </script>
 
 <svelte:head>
-	<title>{data.project.name} · Horizons Crux</title>
+	<title>{pageTitle(data.project.name, data.eventName)}</title>
 </svelte:head>
 
 <div class="flex w-[440px] max-w-full flex-col gap-6">
@@ -24,7 +25,10 @@
 		/>
 	</div>
 	<div class="flex items-center justify-center font-bricolage">
-		<a href="/gallery/{data.slug}" class="{buttonClasses} border-cream text-white hover:bg-white/10">
+		<a
+			href="/gallery/{data.slug}"
+			class="{buttonClasses} border-cream text-white hover:bg-white/10"
+		>
 			Back
 		</a>
 	</div>

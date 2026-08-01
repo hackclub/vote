@@ -1,8 +1,10 @@
 import { prisma } from './db';
+import { SUBMIT_STEPS, type SubmitStep } from '../submit-steps';
 import type { User } from '../../generated/prisma/client';
 
-export const SUBMIT_STEPS = ['team', 'checklist', 'details', 'links', 'hours'] as const;
-export type SubmitStep = (typeof SUBMIT_STEPS)[number];
+// Shared with the participant UI, which needs the step order to draw its back
+// controls and can't import from $lib/server.
+export { SUBMIT_STEPS, type SubmitStep };
 
 /** Stage priority when a user belongs to several events. */
 const STAGE_PRIORITY = { VOTING: 0, SUBMISSION: 1, CLOSED: 2, DRAFT: 3 } as const;
@@ -56,20 +58,6 @@ export async function getParticipantContext(user: User, slug?: string) {
 
 	participants.sort((a, b) => STAGE_PRIORITY[a.event.stage] - STAGE_PRIORITY[b.event.stage]);
 	return toContext(participants[0]);
-}
-
-/** Events this user can act in, ordered by stage priority — powers the picker. */
-export async function getEligibleEvents(user: User) {
-	const participants = await findParticipations(user);
-	participants.sort((a, b) => STAGE_PRIORITY[a.event.stage] - STAGE_PRIORITY[b.event.stage]);
-	return participants.map((p) => ({
-		slug: p.event.slug,
-		name: p.event.name,
-		stage: p.event.stage,
-		logoUrl: p.event.logoUrl,
-		backgroundUrl: p.event.backgroundUrl,
-		tagline: p.event.tagline
-	}));
 }
 
 export type ParticipantContext = NonNullable<Awaited<ReturnType<typeof getParticipantContext>>>;

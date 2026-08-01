@@ -73,7 +73,7 @@
 					</div>
 					<div class="flex flex-col gap-1.5">
 						<Label for="slug">Event slug</Label>
-						<Input id="slug" name="slug" placeholder="horizons-crux" value={data.event.slug} />
+						<Input id="slug" name="slug" placeholder="summer-hackathon" value={data.event.slug} />
 						<p class="text-xs text-muted-foreground">
 							Must match the Attend event slug — participation checks and roster sync use it.
 						</p>
@@ -136,7 +136,7 @@
 						value={data.event.tagline ?? ''}
 					/>
 					<p class="text-xs text-muted-foreground">
-						Short caption shown under the event name on the picker card. Leave blank to omit.
+						Short caption shown under the event name. Leave blank to omit.
 					</p>
 				</div>
 				<div class="flex flex-col gap-1.5">
@@ -148,6 +148,30 @@
 						value={data.event.checklistItems.join('\n')}
 					/>
 				</div>
+				<details class="rounded-lg border px-3 py-2">
+					<summary class="cursor-pointer text-sm font-medium select-none">Advanced</summary>
+					<div class="mt-3 flex flex-col gap-3">
+						<div class="flex items-start gap-2.5">
+							<!-- Keeps the field present when unticked, so the action can tell
+							     "unchecked" apart from "not submitted at all". -->
+							<input type="hidden" name="cardLogoMonochrome" value="off" />
+							<input
+								id="cardLogoMonochrome"
+								name="cardLogoMonochrome"
+								type="checkbox"
+								checked={data.event.cardLogoMonochrome}
+								class="mt-0.5 size-4 shrink-0 rounded border-input accent-foreground"
+							/>
+							<div class="flex flex-col gap-1">
+								<Label for="cardLogoMonochrome">Flatten logo to white on project cards</Label>
+								<p class="text-xs text-muted-foreground">
+									Project cards render the event logo as a solid white silhouette so it stays
+									legible over the shader backdrop. Uncheck to keep the logo's own colours.
+								</p>
+							</div>
+						</div>
+					</div>
+				</details>
 				<div class="flex items-center gap-3">
 					<Button type="submit">Save settings</Button>
 					{#if form?.saved}

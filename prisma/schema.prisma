@@ -39,6 +39,9 @@ model Event {
   /// field names (see src/lib/airtable-sync-fields.ts).
   airtableFieldMap Json?
   logoUrl         String?
+  /// Project cards flatten the logo to solid white so it reads over the mesh
+  /// backdrop. Turn off for logos that depend on their colours.
+  cardLogoMonochrome Boolean @default(true)
   backgroundUrl   String?
   tagline         String?
   checklistItems  String[]

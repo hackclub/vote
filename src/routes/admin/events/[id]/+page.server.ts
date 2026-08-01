@@ -35,10 +35,18 @@ export const actions: Actions = {
 		) {
 			return fail(400, { message: 'Vote limit and team size must be positive whole numbers' });
 		}
-		const checklistItems = String(form.get('checklistItems') ?? '')
-			.split('\n')
-			.map((s) => s.trim())
-			.filter(Boolean);
+		// Only touch fields the submission actually carried. Reading an absent
+		// field as "" and storing null means any form that doesn't post every
+		// field — a stale tab, a partial submit — silently wipes branding.
+		const optionalText = (field: string) =>
+			form.has(field) ? String(form.get(field)).trim() || null : undefined;
+
+		const checklistItems = form.has('checklistItems')
+			? String(form.get('checklistItems'))
+					.split('\n')
+					.map((s) => s.trim())
+					.filter(Boolean)
+			: undefined;
 
 		const event = await prisma.event.findUnique({ where: { id: params.id } });
 		if (!event) error(404);
@@ -62,9 +70,15 @@ export const actions: Actions = {
 				slug,
 				voteLimit,
 				maxTeamSize,
-				logoUrl: String(form.get('logoUrl') ?? '').trim() || null,
-				backgroundUrl: String(form.get('backgroundUrl') ?? '').trim() || null,
-				tagline: String(form.get('tagline') ?? '').trim() || null,
+				logoUrl: optionalText('logoUrl'),
+				// A hidden "off" precedes the checkbox so the key is always present;
+				// the checkbox appends "on" when ticked. Absent entirely means the
+				// form predates this field, so leave the stored value alone.
+				cardLogoMonochrome: form.has('cardLogoMonochrome')
+					? form.getAll('cardLogoMonochrome').includes('on')
+					: undefined,
+				backgroundUrl: optionalText('backgroundUrl'),
+				tagline: optionalText('tagline'),
 				checklistItems
 			}
 		});

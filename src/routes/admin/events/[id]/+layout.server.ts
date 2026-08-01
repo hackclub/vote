@@ -31,6 +31,7 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
 			airtableConnected: !!event.airtableRefreshToken,
 			airtableConnectedBy: event.airtableConnectedBy,
 			logoUrl: event.logoUrl,
+			cardLogoMonochrome: event.cardLogoMonochrome,
 			backgroundUrl: event.backgroundUrl,
 			tagline: event.tagline,
 			checklistItems: event.checklistItems,

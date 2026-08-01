@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { pageTitle } from '$lib/branding';
 
 	const isNotFound = $derived(page.status === 404);
 	const heading = $derived(isNotFound ? 'Page not found' : 'Something went wrong');
@@ -11,7 +12,7 @@
 </script>
 
 <svelte:head>
-	<title>{page.status} · Horizons Crux</title>
+	<title>{pageTitle(String(page.status))}</title>
 </svelte:head>
 
 <div class="relative min-h-screen overflow-hidden bg-[#111] font-bricolage text-white">

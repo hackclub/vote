@@ -27,6 +27,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		// keyed by slug, so it must show this event's logo/background regardless
 		// of who's viewing.
 		logoUrl: event.logoUrl,
+		cardLogoMonochrome: event.cardLogoMonochrome,
 		backgroundUrl: event.backgroundUrl,
 		projects: projects.map((p) => {
 			const makers = p.team.members

@@ -77,11 +77,11 @@
 				<form method="POST" action="?/create" use:enhance class="flex flex-wrap items-end gap-4">
 				<div class="flex flex-col gap-1.5">
 					<Label for="name">Name</Label>
-					<Input id="name" name="name" placeholder="Horizons Crux" class="w-56" required />
+					<Input id="name" name="name" placeholder="Summer Hackathon" class="w-56" required />
 				</div>
 				<div class="flex flex-col gap-1.5">
 					<Label for="slug">Slug (optional)</Label>
-					<Input id="slug" name="slug" placeholder="horizons-crux" class="w-44" />
+					<Input id="slug" name="slug" placeholder="summer-hackathon" class="w-44" />
 				</div>
 				<div class="flex flex-col gap-1.5">
 					<Label for="voteLimit">Votes per person</Label>

@@ -17,6 +17,8 @@ async function main() {
 			stage: 'SUBMISSION',
 			voteLimit: 3,
 			maxTeamSize: 3,
+			// Branding lives on the event, not in the app — every event brings its own.
+			logoUrl: '/brand/crux-logo.webp',
 			airtableBaseId: 'app2wgVgZnozM92TT',
 			airtableTableId: 'tblc2ZbkLmfNRXmJf',
 			checklistItems: parseYaml(readFileSync(new URL('../checklist.yaml', import.meta.url), 'utf8'))
@@ -39,7 +41,9 @@ async function main() {
 		});
 	}
 
-	console.log(`Seeded event "${event.name}" (${event.id}) with ${testParticipants.length} participants.`);
+	console.log(
+		`Seeded event "${event.name}" (${event.id}) with ${testParticipants.length} participants.`
+	);
 }
 
 main()

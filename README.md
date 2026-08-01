@@ -1,6 +1,8 @@
 # Vote
 
-Hackathon voting platform for **Hack Club Horizons Crux**. Participants sign in
+Multi-event hackathon voting platform for **Hack Club Horizons**. Each event
+brings its own name, logo, background, checklist, and Airtable connection;
+participants only see the events they're on the roster for. They sign in
 with Hack Club Auth, form teams, submit projects (mirrored into Airtable — one
 record per team member), and vote on each other's projects with holographic
 trading-card UI faithful to the [Figma design](https://www.figma.com/design/RW0SS1Fy72M9tLil5nk400/Podium-UI2).

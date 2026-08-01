@@ -1,24 +1,31 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { pageTitle } from '$lib/branding';
+	import { backHref, stepNumber, SUBMIT_STEPS } from '$lib/submit-steps';
 	import FlowCard from '$lib/components/participant/FlowCard.svelte';
 	import SectionHeader from '$lib/components/participant/SectionHeader.svelte';
 	import CardButton from '$lib/components/participant/CardButton.svelte';
 
 	let { data, form } = $props();
 
+	const back = backHref(data.slug, 'links');
+
 	let demoUrl = $state(form?.values?.demoUrl ?? data.project?.demoUrl ?? '');
 	let repoUrl = $state(form?.values?.repoUrl ?? data.project?.repoUrl ?? '');
 </script>
 
 <svelte:head>
-	<title>Project links · Horizons Crux</title>
+	<title>{pageTitle('Project links', data.eventName)}</title>
 </svelte:head>
 
 <FlowCard dim>
 	<form method="POST" use:enhance class="flex h-full flex-col px-6 pt-9 pb-6">
 		<SectionHeader
-			title="Project Details"
-			subtitle="Put down details about your project. What's your project about?"
+			backHref={back}
+			step={stepNumber('links')}
+			totalSteps={SUBMIT_STEPS.length}
+			title="Project Links"
+			subtitle="Where can people try your project, and where does the code live?"
 		/>
 
 		<div class="mt-12 flex flex-col gap-4">

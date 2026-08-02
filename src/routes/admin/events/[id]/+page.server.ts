@@ -3,7 +3,19 @@ import { prisma } from '$lib/server/db';
 import { requireEventAdmin } from '$lib/server/admin';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => ({});
+export const load: PageServerLoad = async ({ params }) => {
+	// Ship rate: share of participants who are on a team with a submitted project.
+	const [total, shipped] = await Promise.all([
+		prisma.participant.count({ where: { eventId: params.id } }),
+		prisma.participant.count({
+			where: {
+				eventId: params.id,
+				teamMember: { team: { project: { submittedAt: { not: null } } } }
+			}
+		})
+	]);
+	return { shipRate: { total, shipped, percent: total > 0 ? Math.round((shipped / total) * 100) : 0 } };
+};
 
 const STAGES = ['DRAFT', 'SUBMISSION', 'VOTING', 'CLOSED'] as const;
 

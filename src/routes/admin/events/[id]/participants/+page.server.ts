@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ params }) => {
 		orderBy: { email: 'asc' },
 		include: {
 			user: { select: { id: true } },
-			teamMember: { select: { teamId: true } },
+			teamMember: { select: { team: { select: { project: { select: { submittedAt: true } } } } } },
 			_count: { select: { votes: true } }
 		}
 	});
@@ -25,6 +25,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			attendCompleted: p.attendCompleted,
 			signedUp: !!p.user,
 			onTeam: !!p.teamMember,
+			shipped: !!p.teamMember?.team.project?.submittedAt,
 			votesCast: p._count.votes
 		}))
 	};

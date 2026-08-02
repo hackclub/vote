@@ -33,6 +33,16 @@
 	</div>
 
 	<Card.Root>
+		<Card.Content>
+			<p class="text-3xl font-semibold">{data.shipRate.percent}%</p>
+			<p class="text-sm text-muted-foreground">
+				Ship rate — {data.shipRate.shipped} of {data.shipRate.total} participants on a team that submitted
+				a project
+			</p>
+		</Card.Content>
+	</Card.Root>
+
+	<Card.Root>
 		<Card.Header>
 			<Card.Title>Event stage</Card.Title>
 			<Card.Description>

@@ -45,6 +45,7 @@
 		return [
 			{ href: `/admin/events/${id}`, label: 'Overview', exact: true },
 			{ href: `/admin/events/${id}/participants`, label: 'Participants' },
+			{ href: `/admin/events/${id}/teams`, label: 'Teams' },
 			{ href: `/admin/events/${id}/projects`, label: 'Projects' },
 			{ href: `/admin/events/${id}/airtable`, label: 'Airtable Sync' },
 			{ href: `/admin/events/${id}/results`, label: 'Results' },

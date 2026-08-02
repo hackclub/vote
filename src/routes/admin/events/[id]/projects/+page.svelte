@@ -32,6 +32,7 @@
 		<Table.Root>
 			<Table.Header>
 				<Table.Row>
+					<Table.Head class="w-16"></Table.Head>
 					<Table.Head>Project</Table.Head>
 					<Table.Head>Team</Table.Head>
 					<Table.Head>Status</Table.Head>
@@ -43,6 +44,22 @@
 			<Table.Body>
 				{#each data.projects as p (p.id)}
 					<Table.Row>
+						<Table.Cell>
+							{#if p.screenshotUrl}
+								<a href={p.screenshotUrl} target="_blank" rel="noopener noreferrer">
+									<img
+										src={p.screenshotUrl}
+										alt="Screenshot of {p.name}"
+										class="h-10 w-14 rounded border object-cover"
+										loading="lazy"
+									/>
+								</a>
+							{:else}
+								<div class="flex h-10 w-14 items-center justify-center rounded border bg-muted text-[10px] text-muted-foreground">
+									none
+								</div>
+							{/if}
+						</Table.Cell>
 						<Table.Cell>
 							<span class="font-medium">{p.name}</span>
 							<div class="mt-0.5 flex flex-col text-xs text-muted-foreground">
@@ -84,7 +101,7 @@
 					</Table.Row>
 				{:else}
 					<Table.Row>
-						<Table.Cell colspan={6} class="text-center text-muted-foreground">No projects yet</Table.Cell>
+						<Table.Cell colspan={7} class="text-center text-muted-foreground">No projects yet</Table.Cell>
 					</Table.Row>
 				{/each}
 			</Table.Body>

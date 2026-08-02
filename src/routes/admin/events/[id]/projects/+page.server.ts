@@ -30,6 +30,7 @@ export const load: PageServerLoad = async ({ params }) => {
 				),
 				submitted: !!p.submittedAt,
 				votes: p._count.votes,
+				screenshotUrl: p.screenshotUrl,
 				demoUrl: p.demoUrl,
 				repoUrl: p.repoUrl,
 				sync: p.submittedAt

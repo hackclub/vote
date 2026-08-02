@@ -38,6 +38,15 @@
 					<div class="flex flex-col gap-1.5">
 						<Label for="screenshotUrl">Screenshot URL</Label>
 						<Input id="screenshotUrl" name="screenshotUrl" value={data.project.screenshotUrl ?? ''} />
+						{#if data.project.screenshotUrl}
+							<a href={data.project.screenshotUrl} target="_blank" rel="noopener noreferrer" class="mt-1">
+								<img
+									src={data.project.screenshotUrl}
+									alt="Screenshot of {data.project.name}"
+									class="max-h-48 w-full rounded-md border object-contain"
+								/>
+							</a>
+						{/if}
 					</div>
 					<div class="flex flex-col gap-1.5">
 						<Label for="demoUrl">Demo URL</Label>

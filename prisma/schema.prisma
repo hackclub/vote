@@ -19,6 +19,9 @@ model Event {
   name            String
   slug            String     @unique
   stage           EventStage @default(DRAFT)
+  /// Freeze submissions mid-SUBMISSION without advancing to VOTING: teams can
+  /// no longer create or edit projects, but already-submitted work stays visible.
+  submissionsLocked Boolean  @default(false)
   voteLimit       Int        @default(3)
   maxTeamSize     Int        @default(3)
   airtableBaseId  String?

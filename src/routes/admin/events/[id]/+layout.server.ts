@@ -20,6 +20,7 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
 			name: event.name,
 			slug: event.slug,
 			stage: event.stage,
+			submissionsLocked: event.submissionsLocked,
 			voteLimit: event.voteLimit,
 			maxTeamSize: event.maxTeamSize,
 			airtableBaseId: event.airtableBaseId,

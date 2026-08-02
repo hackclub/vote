@@ -3,6 +3,8 @@
 	import { pageTitle } from '$lib/branding';
 	import EventLogo from '$lib/components/participant/EventLogo.svelte';
 	import FlowCard from '$lib/components/participant/FlowCard.svelte';
+
+	let { data } = $props();
 </script>
 
 <svelte:head>
@@ -14,8 +16,13 @@
 		<EventLogo class="h-[140px] w-auto object-contain" textClass="text-3xl font-bold text-white" />
 		<h1 class="text-2xl font-bold">Submissions have closed</h1>
 		<p class="text-sm text-white/80">
-			Voting is underway, and submissions locked when it began. Since your project wasn't submitted
-			in time, sit tight — results are on their way.
+			{#if data.votingStarted}
+				Voting is underway, and submissions locked when it began. Since your project wasn't
+				submitted in time, sit tight — results are on their way.
+			{:else}
+				Submissions have been locked by the organizers. Since your project wasn't submitted in
+				time, sit tight — hang in there for what's next.
+			{/if}
 		</p>
 	</div>
 </FlowCard>

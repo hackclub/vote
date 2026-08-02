@@ -158,6 +158,26 @@
 						value={data.event.checklistItems.join('\n')}
 					/>
 				</div>
+				<div class="flex items-start gap-2.5 rounded-lg border p-3">
+					<!-- Hidden "off" keeps the field present when unticked so the action
+					     can tell "unchecked" from "not submitted at all". -->
+					<input type="hidden" name="submissionsLocked" value="off" />
+					<input
+						id="submissionsLocked"
+						name="submissionsLocked"
+						type="checkbox"
+						checked={data.event.submissionsLocked}
+						class="mt-0.5 size-4 shrink-0 rounded border-input accent-foreground"
+					/>
+					<div class="flex flex-col gap-1">
+						<Label for="submissionsLocked">Lock submissions</Label>
+						<p class="text-xs text-muted-foreground">
+							Freeze submissions without moving to Voting: teams can no longer create or edit
+							projects, but work that's already submitted stays visible. Only affects the
+							Submission stage.
+						</p>
+					</div>
+				</div>
 				<details class="rounded-lg border px-3 py-2">
 					<summary class="cursor-pointer text-sm font-medium select-none">Advanced</summary>
 					<div class="mt-3 flex flex-col gap-3">

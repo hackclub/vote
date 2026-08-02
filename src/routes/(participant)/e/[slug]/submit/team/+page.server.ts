@@ -14,7 +14,8 @@ export const actions: Actions = {
 		if (!locals.user) redirect(302, '/login');
 		const ctx = await getParticipantContext(locals.user, params.slug);
 		if (!ctx) redirect(302, '/');
-		if (ctx.event.stage !== 'SUBMISSION') redirect(302, flowDestination(ctx));
+		if (ctx.event.stage !== 'SUBMISSION' || ctx.event.submissionsLocked)
+			redirect(302, flowDestination(ctx));
 
 		const form = await request.formData();
 		let ids: string[];

@@ -77,6 +77,10 @@ export function flowDestination(ctx: ParticipantContext): string {
 	// Submissions lock when voting starts; teams that never submitted sit voting out.
 	if (event.stage === 'VOTING') return project?.submittedAt ? `${base}/project` : `${base}/locked`;
 
+	// Admins can freeze submissions before voting: same split — submitted work is
+	// viewable, everyone else lands on the locked screen.
+	if (event.submissionsLocked) return project?.submittedAt ? `${base}/project` : `${base}/locked`;
+
 	if (!team) return `${base}/submit/team`;
 	if (!project || !project.submittedAt) {
 		const step = SUBMIT_STEPS[Math.min(project?.currentStep ?? 1, SUBMIT_STEPS.length - 1)];

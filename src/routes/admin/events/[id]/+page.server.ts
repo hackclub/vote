@@ -82,6 +82,11 @@ export const actions: Actions = {
 				slug,
 				voteLimit,
 				maxTeamSize,
+				// Same hidden-"off" + checkbox pattern as cardLogoMonochrome: absent
+				// entirely means a stale form, so leave the stored value alone.
+				submissionsLocked: form.has('submissionsLocked')
+					? form.getAll('submissionsLocked').includes('on')
+					: undefined,
 				logoUrl: optionalText('logoUrl'),
 				// A hidden "off" precedes the checkbox so the key is always present;
 				// the checkbox appends "on" when ticked. Absent entirely means the

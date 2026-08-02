@@ -9,7 +9,8 @@ import {
 
 /**
  * Action guard: signed in, participant, and the event accepts submissions.
- * Submissions lock the moment voting starts — no new or edited submissions during VOTING.
+ * Submissions lock the moment voting starts — no new or edited submissions during
+ * VOTING — or when an admin freezes them mid-SUBMISSION via `submissionsLocked`.
  */
 export async function requireSubmissionCtx(
 	locals: App.Locals,
@@ -18,7 +19,8 @@ export async function requireSubmissionCtx(
 	if (!locals.user) redirect(302, '/login');
 	const ctx = await getParticipantContext(locals.user, slug);
 	if (!ctx) redirect(302, '/');
-	if (ctx.event.stage !== 'SUBMISSION') redirect(302, flowDestination(ctx));
+	if (ctx.event.stage !== 'SUBMISSION' || ctx.event.submissionsLocked)
+		redirect(302, flowDestination(ctx));
 	return ctx;
 }
 

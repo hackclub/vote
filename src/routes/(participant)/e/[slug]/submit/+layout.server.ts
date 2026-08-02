@@ -9,8 +9,10 @@ export const load: LayoutServerLoad = async ({ locals, params }) => {
 
 	const ctx = await getParticipantContext(locals.user, params.slug);
 	if (!ctx) redirect(302, '/');
-	// Submit pages only exist during SUBMISSION — editing locks once voting starts.
-	if (ctx.event.stage !== 'SUBMISSION') redirect(302, flowDestination(ctx));
+	// Submit pages only exist during SUBMISSION — editing locks once voting starts,
+	// or when an admin freezes submissions mid-stage.
+	if (ctx.event.stage !== 'SUBMISSION' || ctx.event.submissionsLocked)
+		redirect(302, flowDestination(ctx));
 
 	// Teammates are identified by Slack display name + "First L." — never email.
 	const slackIds = [

@@ -29,7 +29,18 @@
 			: [self]
 	);
 
-	type SearchResult = { id: string; name: string; displayName: string | null };
+	type SearchResult = {
+		id: string;
+		name: string;
+		displayName: string | null;
+	} & ({ addable: true } | { addable: false; teammates: string[] });
+
+	function formatTeammates(names: string[]): string {
+		if (names.length === 0) return 'a team';
+		if (names.length === 1) return `a team with ${names[0]}`;
+		if (names.length === 2) return `a team with ${names[0]} & ${names[1]}`;
+		return `a team with ${names.slice(0, -1).join(', ')}, & ${names[names.length - 1]}`;
+	}
 
 	let query = $state('');
 	let results = $state<SearchResult[]>([]);
@@ -65,7 +76,7 @@
 	}
 
 	function add(r: SearchResult) {
-		if (atCapacity) return;
+		if (atCapacity || !r.addable) return;
 		members = [...members, { participantId: r.id, name: r.name, displayName: r.displayName }];
 		query = '';
 		results = [];
@@ -113,16 +124,23 @@
 						class="absolute top-full right-0 left-0 z-20 mt-1 max-h-[140px] overflow-y-auto rounded-xl border border-white bg-[#111]/95 backdrop-blur-md"
 					>
 						{#each visibleResults as r (r.id)}
-							<button
-								type="button"
-								onclick={() => add(r)}
-								class="flex w-full cursor-pointer flex-col px-3 py-1.5 text-left hover:bg-white/10"
-							>
-								<span class="text-base font-medium text-white">{r.displayName || r.name}</span>
-								{#if r.displayName && r.name}
-									<span class="text-xs text-[#999]">{r.name}</span>
-								{/if}
-							</button>
+							{#if r.addable}
+								<button
+									type="button"
+									onclick={() => add(r)}
+									class="flex w-full cursor-pointer flex-col px-3 py-1.5 text-left hover:bg-white/10"
+								>
+									<span class="text-base font-medium text-white">{r.displayName || r.name}</span>
+									{#if r.displayName && r.name}
+										<span class="text-xs text-[#999]">{r.name}</span>
+									{/if}
+								</button>
+							{:else}
+								<div class="flex w-full cursor-not-allowed flex-col px-3 py-1.5 text-left opacity-40">
+									<span class="text-base font-medium text-white">{r.displayName || r.name}</span>
+									<span class="text-xs text-[#999]">In {formatTeammates(r.teammates)}</span>
+								</div>
+							{/if}
 						{/each}
 					</div>
 				{:else if query.trim().length >= 2 && !searching}

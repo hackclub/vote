@@ -1,5 +1,6 @@
 import { prisma } from '$lib/server/db';
 import { requireVotingCtx, stableShuffle } from '$lib/server/vote-guard';
+import { shortName } from '$lib/names';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -29,9 +30,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			description: p.description,
 			screenshotUrl: p.screenshotUrl,
 			makers: p.team.members.map(
-				(m) =>
-					`${m.participant.firstName ?? ''} ${m.participant.lastName ?? ''}`.trim() ||
-					m.participant.email
+				(m) => shortName(m.participant.firstName, m.participant.lastName) || 'Anonymous'
 			),
 			voted: votedProjectIds.has(p.id)
 		}))

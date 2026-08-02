@@ -1,5 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { getParticipantContext, flowDestination } from '$lib/server/flow';
+import { shortName } from '$lib/names';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -21,9 +22,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			repoUrl: ctx.project.repoUrl
 		},
 		makers: ctx.team!.members.map(
-			(m) =>
-				`${m.participant.firstName ?? ''} ${m.participant.lastName ?? ''}`.trim() ||
-				m.participant.email
+			(m) => shortName(m.participant.firstName, m.participant.lastName) || 'Anonymous'
 		)
 	};
 };

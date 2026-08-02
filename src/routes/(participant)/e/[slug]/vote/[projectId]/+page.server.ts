@@ -1,6 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { prisma } from '$lib/server/db';
 import { requireVotingCtx } from '$lib/server/vote-guard';
+import { shortName } from '$lib/names';
 import { Prisma } from '../../../../../../generated/prisma/client';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -40,9 +41,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			repoUrl: project.repoUrl
 		},
 		makers: project.team.members.map(
-			(m) =>
-				`${m.participant.firstName ?? ''} ${m.participant.lastName ?? ''}`.trim() ||
-				m.participant.email
+			(m) => shortName(m.participant.firstName, m.participant.lastName) || 'Anonymous'
 		)
 	};
 };

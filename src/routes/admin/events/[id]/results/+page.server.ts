@@ -17,11 +17,8 @@ export const load: PageServerLoad = async ({ params }) => {
 		.map((p) => ({
 			id: p.id,
 			name: p.name || '(untitled)',
-			members: p.team.members.map(
-				(m) =>
-					`${m.participant.firstName ?? ''} ${m.participant.lastName ?? ''}`.trim() ||
-					m.participant.email
-			),
+			screenshotUrl: p.screenshotUrl,
+			members: p.team.members.map((m) => m.participant.firstName?.trim() || m.participant.email),
 			votes: p._count.votes
 		}))
 		.sort((a, b) => b.votes - a.votes);

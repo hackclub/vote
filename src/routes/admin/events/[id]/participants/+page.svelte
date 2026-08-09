@@ -8,6 +8,20 @@
 	import { Badge } from '$lib/components/ui/badge';
 
 	let { data, form } = $props();
+
+	type VoteFilter = 'all' | 'voted' | 'not-voted';
+	let voteFilter = $state<VoteFilter>('all');
+
+	const filteredParticipants = $derived(
+		data.participants.filter((p) => {
+			if (voteFilter === 'voted') return p.votesCast > 0;
+			if (voteFilter === 'not-voted') return p.votesCast === 0;
+			return true;
+		})
+	);
+
+	const votedCount = $derived(data.participants.filter((p) => p.votesCast > 0).length);
+	const notVotedCount = $derived(data.participants.length - votedCount);
 </script>
 
 <div class="flex flex-col gap-6">
@@ -60,6 +74,31 @@
 				<Button type="submit" variant="outline">Add participant</Button>
 			</form>
 
+			<div class="flex flex-wrap items-center gap-2">
+				<span class="text-sm text-muted-foreground">Filter:</span>
+				<Button
+					variant={voteFilter === 'all' ? 'default' : 'outline'}
+					size="sm"
+					onclick={() => (voteFilter = 'all')}
+				>
+					All ({data.participants.length})
+				</Button>
+				<Button
+					variant={voteFilter === 'voted' ? 'default' : 'outline'}
+					size="sm"
+					onclick={() => (voteFilter = 'voted')}
+				>
+					Voted ({votedCount})
+				</Button>
+				<Button
+					variant={voteFilter === 'not-voted' ? 'default' : 'outline'}
+					size="sm"
+					onclick={() => (voteFilter = 'not-voted')}
+				>
+					Not voted ({notVotedCount})
+				</Button>
+			</div>
+
 			<Table.Root>
 				<Table.Header>
 					<Table.Row>
@@ -71,7 +110,7 @@
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
-					{#each data.participants as p (p.id)}
+					{#each filteredParticipants as p (p.id)}
 						<Table.Row>
 							<Table.Cell class="font-medium">{p.email}</Table.Cell>
 							<Table.Cell>{p.name || '—'}</Table.Cell>
@@ -85,9 +124,9 @@
 							<Table.Cell>
 								<div class="flex gap-1.5">
 									{#if p.attendCompleted}
-										<Badge>Completed</Badge>
+										<Badge>Attend complete</Badge>
 									{:else}
-										<Badge variant="outline">In Progress</Badge>
+										<Badge variant="outline">Attend pending</Badge>
 									{/if}
 									{#if p.signedUp}<Badge variant="secondary">signed up</Badge>{/if}
 									{#if p.onTeam}<Badge variant="secondary">on a team</Badge>{/if}
@@ -116,7 +155,13 @@
 					{:else}
 						<Table.Row>
 							<Table.Cell colspan={5} class="text-center text-muted-foreground">
-								No participants yet — sync from Attend to get started
+								{#if voteFilter === 'voted'}
+									No participants have voted yet
+								{:else if voteFilter === 'not-voted'}
+									Everyone has voted
+								{:else}
+									No participants yet — sync from Attend to get started
+								{/if}
 							</Table.Cell>
 						</Table.Row>
 					{/each}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
 	import { Input } from '$lib/components/ui/input';
@@ -7,6 +8,37 @@
 	import { Textarea } from '$lib/components/ui/textarea';
 
 	let { data, form } = $props();
+
+	// Logo/background can be pasted as a URL or uploaded straight to the CDN.
+	// The text inputs stay bound to these so the settings action persists an
+	// uploaded URL exactly like a pasted one.
+	let logoUrl = $state(data.event.logoUrl ?? '');
+	let backgroundUrl = $state(data.event.backgroundUrl ?? '');
+	let uploading = $state({ logo: false, background: false });
+	let uploadError = $state('');
+	let logoInput: HTMLInputElement;
+	let backgroundInput: HTMLInputElement;
+
+	async function uploadAsset(kind: 'logo' | 'background', input: HTMLInputElement) {
+		const file = input.files?.[0];
+		if (!file) return;
+		uploading = { ...uploading, [kind]: true };
+		uploadError = '';
+		try {
+			const body = new FormData();
+			body.append('file', file);
+			const res = await fetch(`/admin/events/${page.params.id}/assets`, { method: 'POST', body });
+			const payload = await res.json().catch(() => ({}));
+			if (!res.ok) throw new Error(payload.message ?? 'Upload failed');
+			if (kind === 'logo') logoUrl = payload.url;
+			else backgroundUrl = payload.url;
+		} catch (e) {
+			uploadError = e instanceof Error ? e.message : 'Upload failed';
+		} finally {
+			uploading = { ...uploading, [kind]: false };
+			input.value = '';
+		}
+	}
 
 	const stages = [
 		{ value: 'DRAFT', label: 'Draft', description: 'Hidden from participants' },
@@ -111,32 +143,89 @@
 						</div>
 					</div>
 					<div class="flex flex-col gap-1.5">
-						<Label for="logoUrl">Logo URL</Label>
-						<Input
-							id="logoUrl"
-							name="logoUrl"
-							type="url"
-							placeholder="https://cdn.example.com/logo.webp"
-							value={data.event.logoUrl ?? ''}
-						/>
+						<Label for="logoUrl">Logo</Label>
+						<div class="flex items-center gap-2">
+							{#if logoUrl}
+								<img
+									src={logoUrl}
+									alt="Logo preview"
+									class="size-10 shrink-0 rounded border bg-white/60 object-contain p-0.5"
+								/>
+							{/if}
+							<Input
+								id="logoUrl"
+								name="logoUrl"
+								type="url"
+								placeholder="https://cdn.example.com/logo.webp"
+								bind:value={logoUrl}
+								class="flex-1"
+							/>
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								disabled={uploading.logo}
+								onclick={() => logoInput.click()}
+							>
+								{uploading.logo ? 'Uploading…' : 'Upload'}
+							</Button>
+							<input
+								bind:this={logoInput}
+								type="file"
+								accept="image/*"
+								class="hidden"
+								onchange={(e) => uploadAsset('logo', e.currentTarget)}
+							/>
+						</div>
 						<p class="text-xs text-muted-foreground">
-							CDN link to the event logo shown to participants. Leave blank for the default.
+							Upload an image or paste a CDN link. Shown to participants; leave blank for the
+							default.
 						</p>
 					</div>
 					<div class="flex flex-col gap-1.5">
-						<Label for="backgroundUrl">Background URL</Label>
-						<Input
-							id="backgroundUrl"
-							name="backgroundUrl"
-							type="url"
-							placeholder="https://cdn.example.com/card-art.webp"
-							value={data.event.backgroundUrl ?? ''}
-						/>
+						<Label for="backgroundUrl">Background</Label>
+						<div class="flex items-center gap-2">
+							{#if backgroundUrl}
+								<img
+									src={backgroundUrl}
+									alt="Background preview"
+									class="size-10 shrink-0 rounded border object-cover"
+								/>
+							{/if}
+							<Input
+								id="backgroundUrl"
+								name="backgroundUrl"
+								type="url"
+								placeholder="https://cdn.example.com/card-art.webp"
+								bind:value={backgroundUrl}
+								class="flex-1"
+							/>
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								disabled={uploading.background}
+								onclick={() => backgroundInput.click()}
+							>
+								{uploading.background ? 'Uploading…' : 'Upload'}
+							</Button>
+							<input
+								bind:this={backgroundInput}
+								type="file"
+								accept="image/*"
+								class="hidden"
+								onchange={(e) => uploadAsset('background', e.currentTarget)}
+							/>
+						</div>
 						<p class="text-xs text-muted-foreground">
-							CDN link to the art shown behind the flow cards. Leave blank for the default.
+							Upload an image or paste a CDN link for the art behind the flow cards. Leave blank for
+							the default.
 						</p>
 					</div>
 				</div>
+				{#if uploadError}
+					<p class="text-sm text-destructive">{uploadError}</p>
+				{/if}
 				<div class="flex flex-col gap-1.5">
 					<Label for="tagline">Tagline</Label>
 					<Input
@@ -173,8 +262,8 @@
 						<Label for="submissionsLocked">Lock submissions</Label>
 						<p class="text-xs text-muted-foreground">
 							Freeze submissions without moving to Voting: teams can no longer create or edit
-							projects, but work that's already submitted stays visible. Only affects the
-							Submission stage.
+							projects, but work that's already submitted stays visible. Only affects the Submission
+							stage.
 						</p>
 					</div>
 				</div>

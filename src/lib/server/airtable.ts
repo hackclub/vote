@@ -108,6 +108,12 @@ export async function syncProjectToAirtable(projectId: string): Promise<void> {
 		set('hoursOverride', member.hoursEstimate ?? undefined);
 		set('hackatimeProjects', member.hackatimeProjects.join(', '));
 		set('screenshot', screenshotAttachment);
+		set('addressLine1', p.addressLine1 ?? undefined);
+		set('addressLine2', p.addressLine2 ?? undefined);
+		set('addressCity', p.addressCity ?? undefined);
+		set('addressState', p.addressState ?? undefined);
+		set('addressZip', p.addressZip ?? undefined);
+		set('addressCountry', p.addressCountry ?? undefined);
 		return { member, fields };
 	});
 

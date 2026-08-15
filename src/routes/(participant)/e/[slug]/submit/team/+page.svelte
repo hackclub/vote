@@ -48,7 +48,9 @@
 	let debounceTimer: ReturnType<typeof setTimeout>;
 
 	const memberIdsJson = $derived(
-		JSON.stringify(members.filter((m) => m.participantId !== self.participantId).map((m) => m.participantId))
+		JSON.stringify(
+			members.filter((m) => m.participantId !== self.participantId).map((m) => m.participantId)
+		)
 	);
 	const atCapacity = $derived(members.length >= data.event.maxTeamSize);
 	const visibleResults = $derived(
@@ -85,6 +87,41 @@
 	function remove(participantId: string) {
 		if (participantId === self.participantId) return;
 		members = members.filter((m) => m.participantId !== participantId);
+	}
+
+	let emailQuery = $state('');
+	let emailBusy = $state(false);
+	let emailMsg = $state('');
+
+	async function addByEmail() {
+		const email = emailQuery.trim();
+		if (!email || atCapacity) return;
+		emailBusy = true;
+		emailMsg = '';
+		try {
+			const res = await fetch(
+				`/api/participants/lookup?email=${encodeURIComponent(email)}&event=${data.slug}`
+			);
+			const body = res.ok ? await res.json() : { result: null };
+			const r: SearchResult | null = body.result;
+			if (!r) {
+				emailMsg = 'No participant with that email can be added.';
+				return;
+			}
+			if (members.some((m) => m.participantId === r.id)) {
+				emailMsg = "They're already on your team.";
+				emailQuery = '';
+				return;
+			}
+			if (!r.addable) {
+				emailMsg = `${r.displayName || r.name} is already in ${formatTeammates(r.teammates)}.`;
+				return;
+			}
+			add(r);
+			emailQuery = '';
+		} finally {
+			emailBusy = false;
+		}
 	}
 </script>
 
@@ -136,7 +173,9 @@
 									{/if}
 								</button>
 							{:else}
-								<div class="flex w-full cursor-not-allowed flex-col px-3 py-1.5 text-left opacity-40">
+								<div
+									class="flex w-full cursor-not-allowed flex-col px-3 py-1.5 text-left opacity-40"
+								>
 									<span class="text-base font-medium text-white">{r.displayName || r.name}</span>
 									<span class="text-xs text-[#999]">In {formatTeammates(r.teammates)}</span>
 								</div>
@@ -151,6 +190,40 @@
 					</div>
 				{/if}
 			</div>
+		</div>
+
+		<div class="mt-3 flex flex-col gap-1.5">
+			<p class="text-xs text-[#ccc]">…or add by email</p>
+			<div class="flex gap-2">
+				<div
+					class="flex h-9 flex-1 items-center rounded-xl border border-white py-2 pr-2 pl-3 transition-shadow duration-150 focus-within:ring-1 focus-within:ring-white focus-within:ring-inset"
+				>
+					<input
+						type="email"
+						bind:value={emailQuery}
+						onkeydown={(e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								addByEmail();
+							}
+						}}
+						placeholder="teammate@email.com"
+						disabled={atCapacity}
+						class="w-full border-none bg-transparent p-0 text-base text-white placeholder-[#999] focus:ring-0 disabled:opacity-50"
+					/>
+				</div>
+				<button
+					type="button"
+					onclick={addByEmail}
+					disabled={atCapacity || emailBusy || !emailQuery.trim()}
+					class="shrink-0 cursor-pointer rounded-xl border border-white px-4 text-sm text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+				>
+					{emailBusy ? '…' : 'Add'}
+				</button>
+			</div>
+			{#if emailMsg}
+				<p class="text-xs text-[#999]">{emailMsg}</p>
+			{/if}
 		</div>
 
 		<div class="mt-4 flex flex-col gap-2">

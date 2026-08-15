@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import { prisma } from '$lib/server/db';
-import { fetchAttendRoster } from '$lib/server/attend';
+import { fetchAttendRoster, fetchAttendAddress } from '$lib/server/attend';
 import { requireEventAdmin } from '$lib/server/admin';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -55,6 +55,25 @@ export const actions: Actions = {
 		// Upsert (not createMany) so existing rows pick up name/slackId changes.
 		const existing = await prisma.participant.count({ where: { eventId: params.id } });
 		for (const p of eligible) {
+			let address = null;
+			if (p.participantEventId != null) {
+				try {
+					address = await fetchAttendAddress(event.slug, p.participantEventId);
+				} catch {
+					address = null;
+				}
+			}
+			const addressData = address
+				? {
+						addressLine1: address.line1,
+						addressLine2: address.line2,
+						addressCity: address.city,
+						addressState: address.state,
+						addressZip: address.zip,
+						addressCountry: address.country
+					}
+				: {};
+
 			await prisma.participant.upsert({
 				where: { eventId_email: { eventId: params.id, email: p.email } },
 				create: {
@@ -63,7 +82,8 @@ export const actions: Actions = {
 					firstName: p.firstName,
 					lastName: p.lastName,
 					slackId: p.slackId,
-					attendCompleted: p.status === 'complete'
+					attendCompleted: p.status === 'complete',
+					...addressData
 				},
 				// Never clobber slackId/attendCompleted captured at sign-in with
 				// nulls (e.g. while Attend doesn't return these fields yet).
@@ -71,7 +91,8 @@ export const actions: Actions = {
 					firstName: p.firstName,
 					lastName: p.lastName,
 					...(p.slackId ? { slackId: p.slackId } : {}),
-					...(p.status ? { attendCompleted: p.status === 'complete' } : {})
+					...(p.status ? { attendCompleted: p.status === 'complete' } : {}),
+					...addressData
 				}
 			});
 		}
@@ -91,7 +112,9 @@ export const actions: Actions = {
 	add: async ({ params, locals, request }) => {
 		await requireEventAdmin(locals.user, params.id);
 		const form = await request.formData();
-		const email = String(form.get('email') ?? '').toLowerCase().trim();
+		const email = String(form.get('email') ?? '')
+			.toLowerCase()
+			.trim();
 		if (!EMAIL_RE.test(email)) return fail(400, { message: 'Enter a valid email.' });
 
 		const result = await prisma.participant.createMany({

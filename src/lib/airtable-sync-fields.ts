@@ -49,7 +49,33 @@ export const AIRTABLE_SYNC_FIELDS: SyncFieldDef[] = [
 		defaultName: 'Screenshot',
 		compatibleTypes: ['multipleAttachments'],
 		note: 'needs an attachment field'
-	}
+	},
+	{
+		key: 'addressLine1',
+		label: 'Address line 1',
+		defaultName: 'Address (Line 1)',
+		compatibleTypes: TEXT
+	},
+	{
+		key: 'addressLine2',
+		label: 'Address line 2',
+		defaultName: 'Address (Line 2)',
+		compatibleTypes: TEXT
+	},
+	{ key: 'addressCity', label: 'City', defaultName: 'City', compatibleTypes: TEXT },
+	{
+		key: 'addressState',
+		label: 'State / Province',
+		defaultName: 'State / Province',
+		compatibleTypes: TEXT
+	},
+	{
+		key: 'addressZip',
+		label: 'ZIP / Postal code',
+		defaultName: 'ZIP / Postal Code',
+		compatibleTypes: TEXT
+	},
+	{ key: 'addressCountry', label: 'Country', defaultName: 'Country', compatibleTypes: TEXT }
 ];
 
 /** App field key → target Airtable field. Unlisted keys are not synced. */

@@ -81,6 +81,12 @@ model Participant {
   slackDisplayNameSyncedAt DateTime?
   /** Attend registration is complete ("complete" status). Gates voting. */
   attendCompleted Boolean @default(false)
+  addressLine1    String?
+  addressLine2    String?
+  addressCity     String?
+  addressState    String?
+  addressZip      String?
+  addressCountry  String?
   userId          String?
 
   event      Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)

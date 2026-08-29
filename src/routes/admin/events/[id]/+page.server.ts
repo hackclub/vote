@@ -1,6 +1,6 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { prisma } from '$lib/server/db';
-import { requireEventAdmin } from '$lib/server/admin';
+import { isSuperadmin, requireEventAdmin } from '$lib/server/admin';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -100,5 +100,25 @@ export const actions: Actions = {
 			}
 		});
 		return { saved: true };
+	},
+
+	delete: async ({ params, locals, request }) => {
+		await requireEventAdmin(locals.user, params.id);
+		// Creating events is superadmin-only, so destroying one is too.
+		if (!isSuperadmin(locals.user?.email)) error(403, 'Only superadmins can delete events');
+
+		const event = await prisma.event.findUnique({ where: { id: params.id } });
+		if (!event) error(404);
+
+		const form = await request.formData();
+		if (String(form.get('confirm') ?? '').trim() !== event.slug) {
+			// Distinct key so the settings card doesn't show this card's error.
+			return fail(400, { deleteMessage: `Type "${event.slug}" to confirm deletion` });
+		}
+
+		// Every child relation cascades from Event: participants, teams, members,
+		// projects, votes, airtable tracking rows, and the admin allowlist.
+		await prisma.event.delete({ where: { id: params.id } });
+		redirect(302, '/admin');
 	}
 };

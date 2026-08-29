@@ -16,6 +16,9 @@
 	let backgroundUrl = $state(data.event.backgroundUrl ?? '');
 	let uploading = $state({ logo: false, background: false });
 	let uploadError = $state('');
+	// Deleting an event wipes every participant, team, project and vote with it,
+	// so the button stays disabled until the slug is typed back.
+	let deleteConfirm = $state('');
 	let logoInput: HTMLInputElement;
 	let backgroundInput: HTMLInputElement;
 
@@ -303,4 +306,50 @@
 			</form>
 		</Card.Content>
 	</Card.Root>
+
+	{#if data.superadmin}
+		<Card.Root class="border-destructive/50">
+			<Card.Header>
+				<Card.Title class="text-destructive">Danger zone</Card.Title>
+				<Card.Description>
+					Deleting this event also deletes its {data.event.counts.participants} participants, {data
+						.event.counts.teams} teams, {data.event.counts.projects} projects and {data.event.counts
+						.votes} votes. This cannot be undone.
+				</Card.Description>
+			</Card.Header>
+			<Card.Content>
+				<form
+					method="POST"
+					action="?/delete"
+					use:enhance
+					class="flex flex-wrap items-end gap-3"
+					onsubmit={(e) => {
+						if (!confirm(`Permanently delete "${data.event.name}" and everything in it?`)) {
+							e.preventDefault();
+						}
+					}}
+				>
+					<div class="flex flex-col gap-1.5">
+						<Label for="confirm"
+							>Type <span class="font-mono">{data.event.slug}</span> to confirm</Label
+						>
+						<Input
+							id="confirm"
+							name="confirm"
+							bind:value={deleteConfirm}
+							placeholder={data.event.slug}
+							autocomplete="off"
+							class="w-64"
+						/>
+					</div>
+					<Button type="submit" variant="destructive" disabled={deleteConfirm !== data.event.slug}>
+						Delete event
+					</Button>
+					{#if form?.deleteMessage}
+						<span class="text-sm text-destructive">{form.deleteMessage}</span>
+					{/if}
+				</form>
+			</Card.Content>
+		</Card.Root>
+	{/if}
 </div>
